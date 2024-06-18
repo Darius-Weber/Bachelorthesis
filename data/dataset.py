@@ -55,7 +55,6 @@ class QPDataset(InMemoryDataset):
         super().__init__(root, transform, pre_transform, pre_filter)
         path = osp.join(self.processed_dir, 'data.pt')
         self.data, self.slices = torch.load(path)
-
     @property
     def raw_file_names(self) -> List[str]:
         return ['instance_0.pkl.gz']  # there should be at least one pkg
@@ -80,8 +79,7 @@ class QPDataset(InMemoryDataset):
 
             for ip_idx in tqdm(range(len(ip_pkgs))):
                 (Q, q, G, h, A, b, S) = ip_pkgs[ip_idx]
-                #for now no sparse tensor #TODO change it to work with sparse tensors
-                #sp_a = SparseTensor.from_dense(A, has_value=True)
+                #TODO look if sparse works
 
                 sp_Q = SparseTensor.from_dense(Q, has_value=True)
                 sp_G = SparseTensor.from_dense(G, has_value=True)
