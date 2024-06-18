@@ -81,6 +81,7 @@ class QPDataset(InMemoryDataset):
             for ip_idx in tqdm(range(len(ip_pkgs))):
                 (Q, q, G, h, A, b, S) = ip_pkgs[ip_idx]
                 #for now no sparse tensor #TODO change it to work with sparse tensors
+                #sp_a = SparseTensor.from_dense(A, has_value=True)
 
                 sp_Q = SparseTensor.from_dense(Q, has_value=True)
                 sp_G = SparseTensor.from_dense(G, has_value=True)
