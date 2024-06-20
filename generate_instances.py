@@ -15,7 +15,7 @@ def generate_softmarginsvm(y, X, X_dash, C):
     y = y.reshape(-1, 1) * 1.
     H = np.dot(X_dash, X_dash.T) * 1.
 
-    #Converting into cvxopt format
+    # Converting into cvxopt format
     Q = cvxopt_matrix(H)
     q = cvxopt_matrix(-np.ones((m, 1)))
     G = cvxopt_matrix(np.vstack((np.eye(m) * -1, np.eye(m))))

@@ -67,9 +67,8 @@ class Trainer:
 
         return train_losses.item() / num_graphs
 
-
     @torch.no_grad()
-    def eval(self, dataloader, model, scheduler = None):
+    def eval(self, dataloader, model, scheduler=None):
         model.eval()
 
         val_losses = 0.
@@ -105,50 +104,65 @@ class Trainer:
             ) * self.step_weight).mean()
             loss = loss + primal_loss * self.loss_weight['primal']
         if 'objgap' in self.loss_target:
-            obj_loss = (self.loss_func(self.get_obj_metric(data, vals, hard_non_negative=False)) * self.step_weight).mean()
+            obj_loss = (self.loss_func(
+                self.get_obj_metric(data, vals, hard_non_negative=False)) * self.step_weight).mean()
             loss = loss + obj_loss * self.loss_weight['objgap']
         if 'constraint' in self.loss_target:
-            constraint_gap = self.get_constraint_violation(vals, data)
-            cons_loss = (self.loss_func(constraint_gap) * self.step_weight).mean()
+            constraint_gap_eq = self.get_constraint_violation_eq(vals, data)
+            constraint_gap_uq = self.get_constraint_violation_uq(vals, data)
+            cons_loss = (self.loss_func(constraint_gap_eq) * self.step_weight).mean() + (self.loss_func(constraint_gap_uq) * self.step_weight).mean()
             loss = loss + cons_loss * self.loss_weight['constraint']
         return loss
 
-    def get_constraint_violation(self, pred, data):
+    def get_constraint_violation_uq(self, pred, data):
         """
-        Ax - b
         Gx - h
-        :param vals:
+        :param pred:
         :param data:
         :return:
         """
         #CONSTRAIN VIOLTATION
-        #TODO: addapt corresponding to QP (can be wrong)
         pred = pred[:, -self.ipm_steps:]
-        Gx = scatter(pred[data.G_col, :] * data.G_val[:, None], data.A_row, reduce='sum', dim=0)
+        Gx = scatter(pred[data.G_col, :] * data.G_val[:, None], data.G_row, reduce='sum', dim=0)
+
+        constraint_gap = torch.relu(Gx - data.h[:, None])
+        return constraint_gap
+
+    def get_constraint_violation_eq(self, pred, data):
+        """
+        Ax - b
+        :param pred:
+        :param data:
+        :return:
+        """
+        #CONSTRAIN VIOLTATION
+        pred = pred[:, -self.ipm_steps:]
         Ax = scatter(pred[data.A_col, :] * data.A_val[:, None], data.A_row, reduce='sum', dim=0)
-        constraint_gap = torch.relu(Gx-data.h[:, None]) + Ax - data.b[:, None]
-        print("constrain_gap: ", constraint_gap)
+
+        constraint_gap = Ax - data.b[:, None]
         return constraint_gap
 
     def get_obj_metric(self, data, pred, hard_non_negative=False):
         # if hard_non_negative, we need a relu to make x all non-negative
         # just for metric usage, not for training
         #ABSOLUTE OBJECTIVE GAP
-        # TODO: addapt corresponding to QP (can be wrong dimensions in xQx sparse)!!!!
+        # TODO: Look if it really does what it should!
         pred = pred[:, -self.ipm_steps:]
         if hard_non_negative:
             pred = torch.relu(pred)
-        c_times_x = data.q[:, None] * pred #q*x
+        c_times_x = data.q[:, None] * pred  #q*x
         obj_pred_c = scatter(c_times_x, data['vals'].batch, dim=0, reduce='sum')
         x_gt = data.gt_primals[:, -self.ipm_steps:]
-        c_times_xgt = data.obj_const[:, None] * x_gt
+        c_times_xgt = data.q[:, None] * x_gt
         obj_gt_c = scatter(c_times_xgt, data['vals'].batch, dim=0, reduce='sum')
-        xQx_pred = (scatter(pred[data.col_Q, :] * data.val_Q[:, None] * pred[data.row_Q, :], data.row_Q, reduce='sum', dim=0).sum())/2 #maybe not sum()/2?
-        xQx_gt = (x_gt @ data.Q @ x_gt)/2 #can be wrong
+        xQx_pred = (scatter(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], data.Q_row, reduce='sum',
+                            dim=0).sum()) / 2  #maybe not sum()/2?
+        xQx_gt = (scatter(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], data.Q_row, reduce='sum',
+                            dim=0).sum()) / 2
         obj_pred = obj_pred_c + xQx_pred
         obj_gt = obj_gt_c + xQx_gt
-        print("Obj metric groundtruth: ",obj_pred)
-        print("Obj metric groundtruth: ",obj_gt)
+        #print("Obj metric groundtruth: ", obj_pred)
+        #print("Obj metric groundtruth: ", obj_gt)
         return (obj_pred - obj_gt) / obj_gt
 
     def obj_metric(self, dataloader, model):
@@ -162,25 +176,6 @@ class Trainer:
 
         return np.concatenate(obj_gap, axis=0)
 
-    def constraint_metric(self, dataloader, model):
-        """
-        minimize ||Ax - b||^p in case of equality constraints
-         ||relu(Ax - b)||^p in case of inequality
-
-        :param dataloader:
-        :param model:
-        :return:
-        """
-        model.eval()
-
-        cons_gap = []
-        for i, data in enumerate(dataloader):
-            data = data.to(self.device)
-            vals = model(data)
-            cons_gap.append(np.abs(self.get_constraint_violation(vals, data).detach().cpu().numpy()))
-
-        return np.concatenate(cons_gap, axis=0)
-
     @torch.no_grad()
     def eval_metrics(self, dataloader, model):
         """
@@ -192,14 +187,20 @@ class Trainer:
         """
         model.eval()
 
-        cons_gap = []
+        cons_gap_eq = []
+        cons_gap_uq = []
         obj_gap = []
         for i, data in enumerate(dataloader):
             data = data.to(self.device)
-            vals, _ = model(data)
-            cons_gap.append(np.abs(self.get_constraint_violation(vals, data).detach().cpu().numpy()))
+            vals = model(data)
+            constrain_violation_eq = self.get_constraint_violation_eq(vals, data)
+            constrain_violation_uq = self.get_constraint_violation_uq(vals, data)
+
+            cons_gap_eq.append(np.abs(constrain_violation_eq).detach().cpu().numpy())
+            cons_gap_uq.append(np.abs(constrain_violation_uq.detach().cpu().numpy()))
             obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=True).detach().cpu().numpy()))
 
         obj_gap = np.concatenate(obj_gap, axis=0)
-        cons_gap = np.concatenate(cons_gap, axis=0)
-        return obj_gap, cons_gap
+        cons_gap_eq = np.concatenate(cons_gap_eq, axis=0)
+        cons_gap_uq = np.concatenate(cons_gap_uq, axis=0)
+        return obj_gap, cons_gap_eq, cons_gap_uq

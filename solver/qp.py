@@ -2,7 +2,7 @@ from .coneqp import coneqp
 
 options = {}
 #from https://github.com/cvxopt/cvxopt
-def qp(P, q, G = None, h = None, A = None, b = None, solver = None,
+def qp(P, q, G = None, h = None, A = None, b = None, callback = None, solver = None,
     kktsolver = None, initvals = None, **kwargs):
 
     """
@@ -349,4 +349,4 @@ def qp(P, q, G = None, h = None, A = None, b = None, solver = None,
             'residual as primal infeasibility certificate': pinfres,
             'residual as dual infeasibility certificate': dinfres}
 
-    return coneqp(P, q, G, h, None, A,  b, initvals, kktsolver = kktsolver, options = options)
+    return coneqp(P, q, G, h, None, A,  b, initvals, kktsolver=kktsolver, callback=callback, options=options)

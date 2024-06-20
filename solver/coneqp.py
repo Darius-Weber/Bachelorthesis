@@ -2,9 +2,9 @@ import sys
 import numpy as np
 if sys.version > '3': long = int
 options = {}
-#from https://github.com/cvxopt/cvxopt
+# from https://github.com/cvxopt/cvxopt
 def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
-    initvals = None, kktsolver = None, xnewcopy = None, xdot = None,
+    initvals = None, callback=None, kktsolver = None, xnewcopy = None, xdot = None,
     xaxpy = None, xscal = None, ynewcopy = None, ydot = None, yaxpy = None,
     yscal = None, **kwargs):
     """
@@ -422,8 +422,8 @@ def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
     if [ k for k in dims['q'] if not isinstance(k,(int,long)) or k < 1 ]:
         raise TypeError("'dims['q']' must be a list of positive integers")
     if [ k for k in dims['s'] if not isinstance(k,(int,long)) or k < 0 ]:
-        raise TypeError("'dims['s']' must be a list of nonnegative " \
-            "integers")
+        raise TypeError("'dims['s']' must be a list of nonnegative "
+                        "integers")
 
     try: refinement = options['refinement']
     except KeyError:
@@ -792,13 +792,14 @@ def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
                 if show_progress:
                     print("Optimal solution found.")
                 status = 'optimal'
-            intermediate_res.append({'x': np.array(x).copy(), 'y': np.array(y).copy(), 's': np.array(s).copy(), 'z': np.array(z).copy(),
-                                     'gap': gap, 'relative gap': relgap,
-                                     'primal objective': pcost, 'dual objective': dcost,
-                                     'primal infeasibility': pres,
-                                     'dual infeasibility': dres, 'primal slack': -ts,
-                                     'dual slack': -tz, 'iterations': iters, 'complete': False, 'status': status,
-                                     'message': "", 'success': True})
+            if callback is not None:
+                intermediate_res.append(callback({'x': np.array(x).copy(), 'y': np.array(y).copy(), 's': np.array(s).copy(), 'z': np.array(z).copy(),
+                                         'gap': gap, 'relative gap': relgap,
+                                         'primal objective': pcost, 'dual objective': dcost,
+                                         'primal infeasibility': pres,
+                                         'dual infeasibility': dres, 'primal slack': -ts,
+                                         'dual slack': -tz, 'iterations': iters, 'complete': False, 'status': status,
+                                         'message': "", 'success': True}))
             return { 'x': x,  'y': y,  's': s,  'z': z,  'status': status,
                     'gap': gap,  'relative gap': relgap,
                     'primal objective': pcost,  'dual objective': dcost,
@@ -809,13 +810,14 @@ def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
             ts = misc.max_step(s, dims)
             tz = misc.max_step(z, dims)
             #print("XXXXXX",x)
-            intermediate_res.append({'x': np.array(x).copy(), 'y': np.array(y).copy(), 's': np.array(s).copy(), 'z': np.array(z).copy(),
-                                     'gap': gap, 'relative gap': relgap,
-                                     'primal objective': pcost, 'dual objective': dcost,
-                                     'primal infeasibility': pres,
-                                     'dual infeasibility': dres, 'primal slack': -ts,
-                                     'dual slack': -tz, 'iterations': iters, 'complete': False, 'status': 'unknown',
-                                     'message': "", 'success': False})
+            if callback is not None:
+                intermediate_res.append(callback({'x': np.array(x).copy(), 'y': np.array(y).copy(), 's': np.array(s).copy(), 'z': np.array(z).copy(),
+                                         'gap': gap, 'relative gap': relgap,
+                                         'primal objective': pcost, 'dual objective': dcost,
+                                         'primal infeasibility': pres,
+                                         'dual infeasibility': dres, 'primal slack': -ts,
+                                         'dual slack': -tz, 'iterations': iters, 'complete': False, 'status': 'unknown',
+                                         'message': "", 'success': False}))
 
         # Compute initial scaling W and scaled iterates:
         #
