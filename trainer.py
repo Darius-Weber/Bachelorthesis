@@ -107,7 +107,7 @@ class Trainer:
             obj_loss = (self.loss_func(
                 self.get_obj_metric(data, vals, hard_non_negative=False)) * self.step_weight).mean()
             loss = loss + obj_loss * self.loss_weight['objgap']
-        if 'constraint' in self.loss_target:
+        if 'constrain, ' in self.loss_target:
             constraint_gap_eq = self.get_constraint_violation_eq(vals, data)
             constraint_gap_uq = self.get_constraint_violation_uq(vals, data)
             cons_loss = (self.loss_func(constraint_gap_eq) * self.step_weight).mean() + (self.loss_func(constraint_gap_uq) * self.step_weight).mean()
@@ -166,8 +166,7 @@ class Trainer:
         return (obj_pred - obj_gt) / obj_gt
 
     def obj_metric(self, dataloader, model):
-        model.eval()
-
+        model.eval
         obj_gap = []
         for i, data in enumerate(dataloader):
             data = data.to(self.device)

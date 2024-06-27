@@ -1,9 +1,9 @@
 import torch
 import torch.nn.functional as F
 
-# from models.genconv import GENConv
+from models.genconv import GENConv
 from models.gcnconv import GCNConv
-# from models.ginconv import GINEConv
+from models.ginconv import GINEConv
 from torch_geometric.nn import MLP
 from models.hetero_conv import HeteroConv
 
@@ -48,33 +48,31 @@ def get_conv_layer(conv: str,
                    hid_dim: int,
                    num_mlp_layers: int,
                    use_norm: bool):
-    #if conv.lower() == 'genconv':
-        #def get_conv():
-        #    return GENConv(in_channels=in_dim,
-        #                   out_channels=hid_dim,
-        #                   num_layers=num_mlp_layers,
-        #                   aggr='softmax',
-        #                   msg_norm=use_norm,
-        #                   learn_msg_scale=use_norm,
-        #                   norm='batch' if use_norm else None,
-        #                   bias=True,
-        #                   edge_dim=1,
-        #                   in_place=in_place)
-    if conv.lower() == 'gcnconv':
+    if conv.lower() == 'genconv':
+        def get_conv():
+            return GENConv(in_channels=in_dim,
+                           out_channels=hid_dim,
+                           num_layers=num_mlp_layers,
+                           aggr='softmax',
+                           msg_norm=use_norm,
+                           learn_msg_scale=use_norm,
+                           norm='batch' if use_norm else None,
+                           bias=True,
+                           edge_dim=1)
+    elif conv.lower() == 'gcnconv':
         def get_conv():
             return GCNConv(in_dim=in_dim,
                            edge_dim=1,
                            hid_dim=hid_dim,
                            num_mlp_layers=num_mlp_layers,
                            norm='batch' if use_norm else None)
-    #elif conv.lower() == 'ginconv':
-    #    def get_conv():
-    #        return GINEConv(in_dim=in_dim,
-    #                        edge_dim=1,
-    #                        hid_dim=hid_dim,
-    #                        num_mlp_layers=num_mlp_layers,
-    #                        norm='batch' if use_norm else None,
-    #                        in_place=in_place)
+    elif conv.lower() == 'ginconv':
+        def get_conv():
+            return GINEConv(in_dim=in_dim,
+                            edge_dim=1,
+                            hid_dim=hid_dim,
+                            num_mlp_layers=num_mlp_layers,
+                            norm='batch' if use_norm else None)
     else:
         raise NotImplementedError
 
