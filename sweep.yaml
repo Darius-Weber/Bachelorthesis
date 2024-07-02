@@ -1,0 +1,85 @@
+program: main.py
+method: random
+name: sweep
+metric:
+  goal: minimize
+  name: train_loss
+parameters:
+  loss_weight_cons:
+    max: 10
+    min: 0.15
+    distribution: uniform
+  num_pred_layers:
+    max: 4
+    min: 3
+    distribution: int_uniform
+  loss_weight_obj:
+    max: 10
+    min: 0.15
+    distribution: uniform
+  num_mlp_layers:
+    values: [2, 4]
+    distribution: categorical
+  loss_weight_x:
+    max: 1.2
+    min: 1
+    distribution: uniform
+  weight_decay:
+    max: 0.00001
+    min: 0.000000015
+    distribution: uniform
+  micro_batch:
+    max: 4
+    min: 1
+    distribution: int_uniform
+  ipm_steps:
+    max: 8
+    min: 4
+    distribution: int_uniform
+  ipm_alpha:
+    max: 0.9
+    min: 0.15
+    distribution: uniform
+  batchsize:
+    values: [512, 128, 80]
+    distribution: categorical
+  hidden:
+    max: 360
+    min: 90
+    distribution: int_uniform
+  runs:
+    max: 3
+    min: 1
+    distribution: int_uniform
+  conv:
+    values:
+      - ginconv
+      - gcnconv
+      - genconv
+    distribution: categorical
+  lr:
+    max: 0.002
+    min: 0.0005
+    distribution: uniform
+  datapath:
+    values: ["../../../../work/log1/darius.weber/Quadratic_Programming_Datasets"]
+    distribution: categorical
+
+command:
+  - ${python}
+  - main.py
+  - --datapath=${datapath}
+  - --batchsize=${batchsize}
+  - --conv=${conv}
+  - --hidden=${hidden}
+  - --ipm_alpha=${ipm_alpha}
+  - --ipm_steps=${ipm_steps}
+  - --loss_weight_cons=${loss_weight_cons}
+  - --loss_weight_obj=${loss_weight_obj}
+  - --loss_weight_x=${loss_weight_x}
+  - --lr=${lr}
+  - --micro_batch=${micro_batch}
+  - --num_mlp_layers=${num_mlp_layers}
+  - --num_pred_layers=${num_pred_layers}
+  - --runs=${runs}
+  - --weight_decay=${weight_decay}
