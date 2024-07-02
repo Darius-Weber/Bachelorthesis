@@ -30,7 +30,7 @@ def args_parser():
     parser.add_argument('--use_wandb', type=str, default='false')
 
     # ipm processing
-    parser.add_argument('--ipm_steps', type=int, default=8)
+    parser.add_argument('--ipm_steps', type=int, default=4) #TODO change to 8
     parser.add_argument('--ipm_alpha', type=float, default=0.9)
 
     # training dynamics
@@ -38,7 +38,7 @@ def args_parser():
     parser.add_argument('--runs', type=int, default=1)
     parser.add_argument('--lr', type=float, default=1.e-3)
     parser.add_argument('--weight_decay', type=float, default=0.)
-    parser.add_argument('--epoch', type=int, default=1000)
+    parser.add_argument('--epoch', type=int, default=5) #TODO change to 1000
     parser.add_argument('--patience', type=int, default=100)
     parser.add_argument('--batchsize', type=int, default=16)
     parser.add_argument('--micro_batch', type=int, default=1)
@@ -63,16 +63,20 @@ def args_parser():
 
 
 if __name__ == '__main__':
+    log_folder: str = "../../../../work/log1/darius.weber/logs"
+    wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
+    #log_folder: str = "logs"
+    #wandb_folder: str = "wandb"
     args = args_parser()
     args = args_set_bool(vars(args))
     args = ConfigDict(args)  # convert for wandb and yaml
 
     # safe hyperparameters in yaml file
     if args.ckpt:
-        if not os.path.isdir('logs'):
-            os.mkdir('logs')
-        exist_runs = [d for d in os.listdir('logs') if d.startswith('exp')]
-        log_folder_name: str = f'logs/exp{len(exist_runs)}'
+        if not os.path.isdir(log_folder):
+            os.mkdir(log_folder)
+        exist_runs = [d for d in os.listdir(log_folder) if d.startswith('exp')]
+        log_folder_name: str = f'{log_folder}/exp{len(exist_runs)}'
         os.mkdir(log_folder_name)
         with open(os.path.join(log_folder_name, 'config.yaml'), 'w') as outfile:
             yaml.dump(args.to_dict(), outfile, default_flow_style=False)
@@ -81,7 +85,8 @@ if __name__ == '__main__':
                name=args.wandbname if args.wandbname else None,
                mode="online" if args.use_wandb else "disabled",
                config=vars(args),
-               entity="dariusweber"
+               entity="dariusweber_",
+               dir=wandb_folder
                )
     # TODO: look if colloate_fn_ip is right
     dataset = QPDataset(args.datapath,
