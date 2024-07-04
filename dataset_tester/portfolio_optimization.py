@@ -13,10 +13,10 @@ def calculate_frontier(returns, opt_mus_n):
     '''
     returns = pd.DataFrame(returns)
     cov = np.array(np.cov(returns.T))
-    pbar = np.array(returns.mean()).reshape(1, -1)
     N = returns.shape[1]
     pbar = np.matrix(returns.mean())
     S = np.linalg.cholesky(cov)
+
     # define list of optimal / desired mus for which we'd like to find the optimal sigmas
     optimal_mus = []
     r_min = pbar.mean()  # minimum expected return
@@ -25,6 +25,7 @@ def calculate_frontier(returns, opt_mus_n):
         r_min += (pbar.mean() / 100)
     # constraint matrices for quadratic programming
     P = opt.matrix(cov)
+    # print(np.allclose(np.array(P), np.array(np.dot(S, S.T))))
     q = opt.matrix(np.zeros((N, 1)))
     G = opt.matrix(np.concatenate((-pbar, -np.identity(N)), 0))
     A = opt.matrix(1.0, (1, N))

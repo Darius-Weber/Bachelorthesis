@@ -1,9 +1,10 @@
 program: main.py
-method: random
+method: bayes #bayes
+entity: dariusweber
 name: sweep
 metric:
   goal: minimize
-  name: train_loss
+  name: test_hybrid_gap
 parameters:
   loss_weight_cons:
     max: 10
@@ -20,34 +21,34 @@ parameters:
   num_mlp_layers:
     values: [2, 4]
     distribution: categorical
-  loss_weight_x:
+  loss_weight_x: #fix to 1
     max: 1.2
     min: 1
     distribution: uniform
-  weight_decay:
+  weight_decay: #0
     max: 0.00001
     min: 0.000000015
     distribution: uniform
-  micro_batch:
+  micro_batch: #1
     max: 4
     min: 1
     distribution: int_uniform
-  ipm_steps:
+  ipm_steps: #8
     max: 8
     min: 4
     distribution: int_uniform
-  ipm_alpha:
+  ipm_alpha: #0.8
     max: 0.9
     min: 0.15
     distribution: uniform
-  batchsize:
+  batchsize: #large as posible
     values: [512, 128, 80]
     distribution: categorical
   hidden:
     max: 360
     min: 90
     distribution: int_uniform
-  runs:
+  runs: #1
     max: 3
     min: 1
     distribution: int_uniform
@@ -57,7 +58,7 @@ parameters:
       - gcnconv
       - genconv
     distribution: categorical
-  lr:
+  lr: #0.001
     max: 0.002
     min: 0.0005
     distribution: uniform

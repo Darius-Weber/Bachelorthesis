@@ -48,7 +48,7 @@ G = cvxopt_matrix(np.vstack((np.eye(m)*-1,np.eye(m))))
 h = cvxopt_matrix(np.hstack((np.zeros(m), np.ones(m) * C)))
 A = cvxopt_matrix(y.reshape(1, -1))
 b = cvxopt_matrix(np.zeros(1))
-
+# print(np.allclose(np.array(Q), np.array(np.dot(X_dash, X_dash.T))))
 #Run solver
 sol = cvxopt_solvers.qp(Q, q, G, h, A, b)
 alphas = np.array(sol['x'])

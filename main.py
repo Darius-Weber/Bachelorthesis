@@ -63,10 +63,10 @@ def args_parser():
 
 
 if __name__ == '__main__':
-    log_folder: str = "../../../../work/log1/darius.weber/logs"
-    wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
-    #log_folder: str = "logs"
-    #wandb_folder: str = "wandb"
+    #log_folder: str = "../../../../work/log1/darius.weber/logs"
+    #wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
+    log_folder: str = "logs"
+    wandb_folder: str = "wandb"
     args = args_parser()
     args = args_set_bool(vars(args))
     args = ConfigDict(args)  # convert for wandb and yaml
