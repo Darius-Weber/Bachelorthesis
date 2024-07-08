@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 #https://xavierbourretsicotte.github.io/SVM_implementation.html
 #Dataset:
 #https://goelhardik.github.io/2016/11/28/svm-cvxopt/
-m = 10000
+
 DIM = 2
 COLORS = ['red', 'blue']
 

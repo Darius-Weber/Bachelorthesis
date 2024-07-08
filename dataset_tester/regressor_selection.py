@@ -7,7 +7,7 @@ from cvxopt import blas, lapack, solvers, matrix, mul
 import cvxopt
 import numpy as np
 from pickle import load
-solvers.options['show_progress'] = 0
+solvers.options['show_progress'] = True
 try: import pylab
 except ImportError: pylab_installed = False
 else: pylab_installed = True
@@ -27,8 +27,8 @@ def split_positive_semidefinite(Q, tol=1e-10):
 
 
 # Set dimensions
-m = 10  # number of rows for A
-n = 20  # number of columns for A
+m = 20  # number of rows for A
+n = 40  # number of columns for A
 
 # Generate random A matrix
 A = cvxopt.matrix(np.random.randn(m, n))

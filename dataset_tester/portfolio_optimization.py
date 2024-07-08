@@ -5,6 +5,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #https://github.com/aghanhussain/Markowitz-Portfolio-Optimization-with-Python/blob/master/Markowitz-Portfolio-Optimization-with-Python.ipynb
+
+def split_positive_semidefinite(Q, tol=1e-10):
+    # Perform SVD of Q with full precision
+    U, Sigma, Vt = np.linalg.svd(Q, full_matrices=False)
+
+    # Construct S = U @ sqrt(diag(Sigma)) @ Vt
+    sqrt_sigma = np.sqrt(np.maximum(Sigma, 0))  # Ensure Sigma is non-negative
+    S = U @ np.diag(sqrt_sigma)
+
+    # Round elements close to zero due to floating point errors
+    S[np.abs(S) < tol] = 0
+    return S
 def calculate_frontier(returns, opt_mus_n):
     '''
     returns optimal portfolio weights and corresponding sigmas for a desired optimal portfolio return
@@ -15,7 +27,8 @@ def calculate_frontier(returns, opt_mus_n):
     cov = np.array(np.cov(returns.T))
     N = returns.shape[1]
     pbar = np.matrix(returns.mean())
-    S = np.linalg.cholesky(cov)
+    S = split_positive_semidefinite(cov)
+    # print(np.allclose(np.array(cov), np.array(np.dot(S, S.T))))
 
     # define list of optimal / desired mus for which we'd like to find the optimal sigmas
     optimal_mus = []
@@ -32,7 +45,7 @@ def calculate_frontier(returns, opt_mus_n):
     b = opt.matrix(1.0)
 
     # hide optimization
-    opt.solvers.options['show_progress'] = False
+    opt.solvers.options['show_progress'] = True
     # calculate portfolio weights, every weight vector is of size Nx1
     # find optimal weights with qp(P, q, G, h, A, b)
     try:
@@ -86,8 +99,8 @@ def create_random_portfolios(returns, n_portfolios=1500):
 
 
 np.random.seed(1)
-n_obs = 252
-n_assets = 4
+n_obs = 252 #252 trading days
+n_assets = 4 # number of assets
 opt_mus_n = 35  #when error.
 
 artificial_returns = np.random.randn(n_obs, n_assets) + 0.05

@@ -58,7 +58,7 @@ def generate_softmarginsvm(y, X, C):
 def generate_markowitz_portfolio_optimization(returns, r_min, pbar):
     cov = np.array(np.cov(returns.T))
     N = returns.shape[1]
-    S = cvxopt_matrix(np.linalg.cholesky(cov)) # Decomposition of covariance matrix
+    S = cvxopt_matrix(split_positive_semidefinite(cov)) # Decomposition of covariance matrix
     Q = cvxopt_matrix(cov)
     q = cvxopt_matrix(np.zeros((N, 1)))
     G = cvxopt_matrix(np.concatenate((-pbar, -np.identity(N)), 0))

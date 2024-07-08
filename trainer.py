@@ -194,11 +194,11 @@ class Trainer:
         for i, data in enumerate(dataloader):
             data = data.to(self.device)
             vals = model(data)
-            constrain_violation_eq = self.get_constraint_violation_eq(vals, data)
-            constrain_violation_uq = self.get_constraint_violation_uq(vals, data)
+            constraint_violation_eq = self.get_constraint_violation_eq(vals, data)
+            constraint_violation_uq = self.get_constraint_violation_uq(vals, data)
 
-            cons_gap_eq.append(np.abs(constrain_violation_eq.detach().cpu().numpy()))
-            cons_gap_uq.append(np.abs(constrain_violation_uq.detach().cpu().numpy()))
+            cons_gap_eq.append(np.abs(constraint_violation_eq.detach().cpu().numpy()))
+            cons_gap_uq.append(np.abs(constraint_violation_uq.detach().cpu().numpy()))
             obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=True).detach().cpu().numpy()))
 
         obj_gap = np.concatenate(obj_gap, axis=0)

@@ -39,11 +39,11 @@ def generate_u_shaped_data(u):
 
 
 
-solvers.options['show_progress'] = 0
+solvers.options['show_progress'] = True
 
-
+NUM = 100
 # Generate 'u' values (from -2 to 2) for the independent variable
-u_values = np.linspace(-2.0, 2.0, num=50).reshape(-1, 1)
+u_values = np.linspace(-2.0, 2.0, num=NUM).reshape(-1, 1)
 
 # Generate 'y' values based on 'u'
 y_values = generate_u_shaped_data(u_values)
