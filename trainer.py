@@ -182,7 +182,6 @@ class Trainer:
     def eval_metrics(self, dataloader, model):
         """
         both obj and constraint gap
-
         :param dataloader:
         :param model:
         :return:
@@ -198,7 +197,7 @@ class Trainer:
             constrain_violation_eq = self.get_constraint_violation_eq(vals, data)
             constrain_violation_uq = self.get_constraint_violation_uq(vals, data)
 
-            cons_gap_eq.append(np.abs(constrain_violation_eq).detach().cpu().numpy())
+            cons_gap_eq.append(np.abs(constrain_violation_eq.detach().cpu().numpy()))
             cons_gap_uq.append(np.abs(constrain_violation_uq.detach().cpu().numpy()))
             obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=True).detach().cpu().numpy()))
 
