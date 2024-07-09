@@ -30,7 +30,7 @@ def args_parser():
     parser.add_argument('--use_wandb', type=str, default='false')
 
     # ipm processing
-    parser.add_argument('--ipm_steps', type=int, default=4) #TODO change to 8
+    parser.add_argument('--ipm_steps', type=int, default=8) #TODO change to 8
     parser.add_argument('--ipm_alpha', type=float, default=0.9)
 
     # training dynamics
@@ -63,10 +63,10 @@ def args_parser():
 
 
 if __name__ == '__main__':
-    log_folder: str = "../../../../work/log1/darius.weber/logs"
-    wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
-    #log_folder: str = "logs"
-    #wandb_folder: str = "wandb"
+    #log_folder: str = "../../../../work/log1/darius.weber/logs"
+    #wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
+    log_folder: str = "logs"
+    wandb_folder: str = "wandb"
     args = args_parser()
     args = args_set_bool(vars(args))
     args = ConfigDict(args)  # convert for wandb and yaml
@@ -89,7 +89,7 @@ if __name__ == '__main__':
                dir=wandb_folder
                )
     # TODO: look if colloate_fn_ip is right
-    dataset = QPDataset(args.datapath,
+    dataset = QPDataset(args.datapath, args.ipm_steps,
                         extra_path=f'{args.ipm_steps}steps')
 
     train_loader = DataLoader(dataset[:int(len(dataset) * 0.8)],
@@ -154,7 +154,9 @@ if __name__ == '__main__':
                 val_gaps, val_constraint_gap_eq, val_constraint_gap_uq = trainer.eval_metrics(val_loader, model)
                 # metric to cache the best model
                 cur_mean_gap = val_gaps[:, -1].mean().item()
-                cur_cons_gap_mean = val_constraint_gap_eq[:, -1].mean().item() + val_constraint_gap_uq[:, -1].mean().item()
+                val_constraint_gap_eq_mean = val_constraint_gap_eq[:, -1].mean().item() if val_constraint_gap_eq.shape[1] != 0 else 0
+                val_constraint_gap_uq_mean = val_constraint_gap_uq[:, -1].mean().item() if val_constraint_gap_uq.shape[1] != 0 else 0
+                cur_cons_gap_mean = val_constraint_gap_eq_mean + val_constraint_gap_uq_mean
                 if scheduler is not None:
                     scheduler.step(cur_mean_gap)
 

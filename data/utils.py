@@ -45,13 +45,13 @@ def collate_fn_ip(graphs: List[HeteroData]):
     new_batch.A_col += col_bias_A
 
     # for S
-    row_bias_S = torch.hstack([new_batch.S_num_row.new_zeros(1), new_batch.S_num_row[:-1]]).cumsum(dim=0)
-    row_bias_S = torch.repeat_interleave(row_bias_S, new_batch.S_nnz)
-    new_batch.S_row += row_bias_S
+    #row_bias_S = torch.hstack([new_batch.S_num_row.new_zeros(1), new_batch.S_num_row[:-1]]).cumsum(dim=0)
+    #row_bias_S = torch.repeat_interleave(row_bias_S, new_batch.S_nnz)
+    #new_batch.S_row += row_bias_S
 
-    col_bias_S = torch.hstack([new_batch.S_num_col.new_zeros(1), new_batch.S_num_col[:-1]]).cumsum(dim=0)
-    col_bias_S = torch.repeat_interleave(col_bias_S, new_batch.S_nnz)
-    new_batch.S_col += col_bias_S
+    #col_bias_S = torch.hstack([new_batch.S_num_col.new_zeros(1), new_batch.S_num_col[:-1]]).cumsum(dim=0)
+    #col_bias_S = torch.repeat_interleave(col_bias_S, new_batch.S_nnz)
+    #new_batch.S_col += col_bias_S
 
     # Adjusting S adjacency matrix indices
     #row_bias_S = torch.hstack([new_batch.S_num_row.new_zeros(1), new_batch.S_num_row[:-1]]).cumsum(dim=0)

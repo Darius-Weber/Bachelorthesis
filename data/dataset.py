@@ -42,8 +42,10 @@ class QPDataset(InMemoryDataset):
     def __init__(
             self,
             root: str,
+            ipm_steps: int, #TODO: look if this works
             extra_path: str,
     ):
+        self.ipm_steps = ipm_steps
         self.extra_path = extra_path
         super().__init__(root)
         path = osp.join(self.processed_dir, 'data.pt')
@@ -121,15 +123,17 @@ class QPDataset(InMemoryDataset):
                 x_values = [iteration['x'] for iteration in sol['intermediate']]
                 x = np.stack(x_values, axis=1)
                 x = x.reshape(x.shape[0], -1) # should work!
-                #assert not np.isnan(sol['fun'])
 
                 # padding is a matrix that repeats the last element of each row.
                 # Need it because x must be the same size for all instances. As
                 # ipm can have different iterations for each instance, we need to pad
-                padding = np.repeat(x[:, -1:], max_ipm_steps+1 - x.shape[1], axis=1)
-                # Concatenate the original matrix with the padding matrix
-                if padding.size != 0:
-                    x = np.hstack((x, padding))
+                if (max_ipm_steps+1 - x.shape[1] > 0):
+                    x = np.hstack((x, np.repeat(x[:, -1:], max_ipm_steps+1 - x.shape[1], axis=1)))
+
+                # look that number of ipm steps given is not smaller than the actual number of steps:
+                if (self.ipm_steps - x.shape[1]>0):
+                    x = np.hstack((x, np.repeat(x[:, -1:], self.ipm_steps - x.shape[1], axis=1)))
+
                 gt_primals = torch.from_numpy(x).to(torch.float)
                 # Dual Solution for inequality constraints
                 #z = np.array(sol['z'])
@@ -139,7 +143,7 @@ class QPDataset(InMemoryDataset):
                 # gt_slacks = np.array(sol['s'])
                 stacked_tensor = torch.cat([
                     torch.cat([q.mean(0, keepdim=True), q.std(0, keepdim=True)], dim=0).squeeze().unsqueeze(0),
-                    torch.cat([S.mean(0, keepdims=True), S.std(0, keepdims=True)], dim=0)
+                    torch.cat([S.mean(0, keepdims=True), S.std(0, keepdims=True)], dim=0).T
                 ], dim=0)
                 #print("cons", torch.cat([qp_constraintmatrix.mean(1, keepdim=True),
                                           #qp_constraintmatrix.std(1, keepdim=True)], dim=1))
