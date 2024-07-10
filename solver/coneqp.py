@@ -468,6 +468,7 @@ def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
 
     if A is None:
         if customx or customy:
+            print("A is None")
             def A(x, y, trans = 'N', alpha = 1.0, beta = 0.0):
                 if trans == 'N': pass
                 else: xscal(beta, y)

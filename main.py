@@ -150,8 +150,15 @@ if __name__ == '__main__':
             #print(train_loss)
             with torch.no_grad():
                 # val_loss = trainer.eval(val_loader, model, scheduler)
-                # train_gaps, train_constraint_gap = trainer.eval_metrics(train_loader, model)
+                #train metric
+                train_gaps, train_constraint_gap_eq, train_constraint_gap_uq = trainer.eval_metrics(train_loader, model)
+                train_mean_gap = train_gaps[:, -1].mean().item()
+                train_constraint_gap_eq_mean = train_constraint_gap_eq[:, -1].mean().item() if train_constraint_gap_eq.shape[1] != 0 else 0
+                train_constraint_gap_uq_mean = train_constraint_gap_uq[:, -1].mean().item() if train_constraint_gap_uq.shape[1] != 0 else 0
+                train_cons_gap_mean = train_constraint_gap_eq_mean + train_constraint_gap_uq_mean
+                #val metric
                 val_gaps, val_constraint_gap_eq, val_constraint_gap_uq = trainer.eval_metrics(val_loader, model)
+                
                 # metric to cache the best model
                 cur_mean_gap = val_gaps[:, -1].mean().item()
                 val_constraint_gap_eq_mean = val_constraint_gap_eq[:, -1].mean().item() if val_constraint_gap_eq.shape[1] != 0 else 0
@@ -179,6 +186,9 @@ if __name__ == '__main__':
                               'lr': scheduler.optimizer.param_groups[0]["lr"]})
             log_dict = {'train_loss': train_loss,
                         # 'val_loss': val_loss,
+                        'train_obj_gap_last_mean': train_mean_gap, #train metrics
+                        'train_cons_gap_last_mean': train_cons_gap_mean, #train metrics
+                        'train_hybrid_gap': train_mean_gap + train_cons_gap_mean, #train metrics
                         'val_obj_gap_last_mean': cur_mean_gap,
                         'val_cons_gap_last_mean': cur_cons_gap_mean,
                         'lr': scheduler.optimizer.param_groups[0]["lr"]}
@@ -192,10 +202,13 @@ if __name__ == '__main__':
         with torch.no_grad():
             # test_loss = trainer.eval(test_loader, model, None)
             test_gaps, test_cons_gap_eq, test_cons_gap_uq = trainer.eval_metrics(test_loader, model)
+            
+            test_cons_gap_eq_mean = test_cons_gap_eq[:, -1].mean().item() if val_constraint_gap_eq.shape[1] != 0 else 0
+            test_cons_gap_uq_mean = test_cons_gap_uq[:, -1].mean().item() if val_constraint_gap_uq.shape[1] != 0 else 0
             #obj_gap, cons_gap_eq, cons_gap_uq
         # test_losses.append(test_loss)
         test_objgap_mean.append(test_gaps[:, -1].mean().item())
-        test_consgap_mean.append(test_cons_gap_eq[:, -1].mean().item() + test_cons_gap_uq[:, -1].mean().item())
+        test_consgap_mean.append(test_cons_gap_eq_mean + test_cons_gap_uq_mean)
 
         wandb.log({'test_objgap': test_objgap_mean[-1]})
         wandb.log({'test_consgap': test_consgap_mean[-1]})

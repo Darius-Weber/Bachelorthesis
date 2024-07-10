@@ -4,7 +4,7 @@ entity: dariusweber_
 name: sweep
 metric:
   goal: minimize
-  name: test_hybrid_gap
+  name: train_hybrid_gap
 parameters:
   loss_weight_cons:
     max: 10

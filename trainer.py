@@ -140,6 +140,7 @@ class Trainer:
         Ax = scatter(pred[data.A_col, :] * data.A_val[:, None], data.A_row, reduce='sum', dim=0)
 
         constraint_gap = Ax - data.b[:, None]
+        #print("gap-eq",constraint_gap)
         return constraint_gap
 
     def get_obj_metric(self, data, pred, hard_non_negative=False):
@@ -167,7 +168,11 @@ class Trainer:
         obj_pred = obj_pred_c + xQx_pred
         obj_gt = obj_gt_c + xQx_gt
 
-
+        #print("c_gt", obj_gt_c.shape)
+        #print("c_pred", obj_pred_c.shape)
+        #print("xQx_gt",xQx_gt.shape)
+        #print("xQx_pred",xQx_pred.shape)
+    
         #print("Obj metric pred: ", obj_pred)
         #print("Obj metric groundtruth: ", obj_gt)
         return (obj_pred - obj_gt) / obj_gt

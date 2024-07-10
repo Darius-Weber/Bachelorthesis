@@ -8,8 +8,8 @@ import numpy as np
 import torch
 from torch_geometric.data import Batch, HeteroData, InMemoryDataset
 from torch_sparse import SparseTensor
-import cvxopt
-from cvxopt import solvers
+from cvxopt import matrix as cvxopt_matrix
+from solver.qp import qp
 from tqdm import tqdm
 
 
@@ -20,6 +20,9 @@ def generate_matrix(c, o):
     matrix = torch.stack((row1, row2))
     return matrix
 
+# Function to convert PyTorch tensor to cvxopt matrix
+def torch_to_cvxopt(tensor):
+    return cvxopt_matrix(tensor.numpy())
 
 def swap_rows(tensor, idx1, idx2):
     """
@@ -74,7 +77,17 @@ class QPDataset(InMemoryDataset):
                 ip_pkgs = pickle.load(file)
 
             for ip_idx in tqdm(range(len(ip_pkgs))):
-                (Q, q, G, h, A, b, S, sol, max_ipm_steps) = ip_pkgs[ip_idx]
+                (Q_cvx, q_cvx, G_cvx, h_cvx, A_cvx, b_cvx, S_cvx, max_ipm_steps) = ip_pkgs[ip_idx]
+                # Solve the quadratic program
+                sol = qp(Q_cvx, q_cvx, G_cvx, h_cvx, A_cvx, b_cvx, callback=lambda res: res)
+                Q = torch.from_numpy(np.array(Q_cvx)).to(torch.float)
+                q = torch.from_numpy(np.array(q_cvx)).to(torch.float)
+                G = torch.from_numpy(np.array(G_cvx)).to(torch.float)
+                h = torch.from_numpy(np.array(h_cvx)).to(torch.float)
+                A = torch.from_numpy(np.array(A_cvx)).to(torch.float)
+                b = torch.from_numpy(np.array(b_cvx)).to(torch.float)
+                S = torch.from_numpy(np.array(S_cvx)).to(torch.float)
+                
                 #TODO look if sparse works. Maybe not every matrix should be sparse
                 sp_Q = SparseTensor.from_dense(Q, has_value=True)
                 sp_G = SparseTensor.from_dense(G, has_value=True)

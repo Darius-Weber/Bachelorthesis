@@ -114,9 +114,9 @@ def generate_convex_function_to_data(u_values):
     G = cvxopt_matrix(G)
     h = cvxopt_matrix(0.0, (m ** 2, 1))
     A = spmatrix([], [], [], (0, q.size[0]))
+    #dummy equality constraint
     A = cvxopt_matrix(A)
     b = cvxopt_matrix(0.0, (0, 1))
-    #dummy equality constraint
     return Q, q, G, h, A, b, S
 
 def generate_regressor_selection(alpha_index, m, n):
