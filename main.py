@@ -27,7 +27,7 @@ def args_parser():
     parser.add_argument('--datapath', type=str, required=True)
     parser.add_argument('--wandbproject', type=str, default='default')
     parser.add_argument('--wandbname', type=str, default='')
-    parser.add_argument('--use_wandb', type=str, default='false')
+    parser.add_argument('--use_wandb', type=str, default='True')
 
     # ipm processing
     parser.add_argument('--ipm_steps', type=int, default=8) #TODO change to 8
@@ -38,7 +38,7 @@ def args_parser():
     parser.add_argument('--runs', type=int, default=1)
     parser.add_argument('--lr', type=float, default=1.e-3)
     parser.add_argument('--weight_decay', type=float, default=0.)
-    parser.add_argument('--epoch', type=int, default=1000)
+    parser.add_argument('--epoch', type=int, default=4)
     parser.add_argument('--patience', type=int, default=100)
     parser.add_argument('--batchsize', type=int, default=16)
     parser.add_argument('--micro_batch', type=int, default=1)
@@ -147,7 +147,7 @@ if __name__ == '__main__':
         pbar = tqdm(range(args.epoch))  # progress bar
         for epoch in pbar:
             train_loss = trainer.train(train_loader, model, optimizer)
-
+            #print(train_loss)
             with torch.no_grad():
                 # val_loss = trainer.eval(val_loader, model, scheduler)
                 # train_gaps, train_constraint_gap = trainer.eval_metrics(train_loader, model)

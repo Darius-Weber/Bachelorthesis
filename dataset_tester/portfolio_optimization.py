@@ -29,7 +29,7 @@ def calculate_frontier(returns, opt_mus_n):
     pbar = np.matrix(returns.mean())
     S = split_positive_semidefinite(cov)
     # print(np.allclose(np.array(cov), np.array(np.dot(S, S.T))))
-
+    #print(cov.size)
     # define list of optimal / desired mus for which we'd like to find the optimal sigmas
     optimal_mus = []
     r_min = pbar.mean()  # minimum expected return

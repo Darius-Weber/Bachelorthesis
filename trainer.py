@@ -152,6 +152,7 @@ class Trainer:
             pred = torch.relu(pred)
         c_times_x = data.q[:, None] * pred  #q*x
         obj_pred_c = scatter(c_times_x, data['vals'].batch, dim=0, reduce='sum')
+
         x_gt = data.gt_primals[:, -self.ipm_steps:]
         c_times_xgt = data.q[:, None] * x_gt
         obj_gt_c = scatter(c_times_xgt, data['vals'].batch, dim=0, reduce='sum')
@@ -161,10 +162,13 @@ class Trainer:
         xQx_pred = torch.sum(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], axis=0)
         #xQx_gt = (scatter(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], data.Q_row, reduce='sum',
         #                    dim=0).sum()) / 2
-        xQx_gt = torch.sum(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], axis=0)
+
+        xQx_gt = torch.sum(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], axis=0)
         obj_pred = obj_pred_c + xQx_pred
         obj_gt = obj_gt_c + xQx_gt
-        #print("Obj metric groundtruth: ", obj_pred)
+
+
+        #print("Obj metric pred: ", obj_pred)
         #print("Obj metric groundtruth: ", obj_gt)
         return (obj_pred - obj_gt) / obj_gt
 
