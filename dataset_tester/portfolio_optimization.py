@@ -43,7 +43,9 @@ def calculate_frontier(returns, opt_mus_n):
     G = opt.matrix(np.concatenate((-pbar, -np.identity(N)), 0))
     A = opt.matrix(1.0, (1, N))
     b = opt.matrix(1.0)
-
+    print(P)
+    print(G)
+    print(A)
     # hide optimization
     opt.solvers.options['show_progress'] = True
     # calculate portfolio weights, every weight vector is of size Nx1

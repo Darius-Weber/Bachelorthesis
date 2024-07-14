@@ -27,8 +27,8 @@ def split_positive_semidefinite(Q, tol=1e-10):
 
 
 # Set dimensions
-m = 20  # number of rows for A
-n = 40  # number of columns for A
+m = 2  # number of rows for A (20)
+n = 4  # number of columns for A (30)
 
 # Generate random A matrix
 A = cvxopt.matrix(np.random.randn(m, n))
@@ -59,6 +59,8 @@ I[::n+1] = 1.0
 G = matrix([[I, -I, matrix(0.0, (1,n))], [-I, -I, matrix(1.0, (1,n))]])
 h = matrix(0.0, (2*n+1,1))
 
+
+
 # Least-norm solution
 xln = matrix(0.0, (n,1))
 xln[:m] = b
@@ -75,7 +77,14 @@ for alpha in alphas:
     #    subject to  ||x||_1 <= alpha
 
     h[-1] = alpha
+    print("P = ", P)
+    print("S = ", S)
+    print("q = ", q)
+    print("G = ", G)
+    print("h = ", h)
+    
     x = solvers.qp(P, q, G, h)['x'][:n]
+    print("ad",x)
     xmax = max(abs(x))
     I = [ k for k in range(n) if abs(x[k]) > tol*xmax ]
     if len(I) <= m:

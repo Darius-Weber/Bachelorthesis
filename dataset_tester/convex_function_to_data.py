@@ -41,7 +41,7 @@ def generate_u_shaped_data(u):
 
 solvers.options['show_progress'] = True
 
-NUM = 100
+NUM = 3
 # Generate 'u' values (from -2 to 2) for the independent variable
 u_values = np.linspace(-2.0, 2.0, num=NUM).reshape(-1, 1)
 
@@ -66,6 +66,8 @@ P = matrix(0.0, (nvars, nvars))
 for i in range(m):
     P[i, i] = 1.0
 S = split_positive_semidefinite(P)
+print(P)
+print(S)
 q = matrix(0.0, (nvars,1))
 q[:m] = -y
 # print(np.allclose(np.array(P), np.array(np.dot(S, S.T))))
@@ -88,7 +90,12 @@ for i in range(m):
 h = matrix(0.0, (m**2,1))
 A = spmatrix([], [], [], (0, q.size[0]))
 b = matrix(0.0, (0,1))
+print("G", G)
+print("h", h)
+print("A",A)
+print("b", b)
 sol = solvers.qp(P, q, G, h, A, b)
+print("x",sol['x'])
 yhat = np.array(sol['x'][:m]).flatten()
 g = np.array(sol['x'][m:]).flatten()
 

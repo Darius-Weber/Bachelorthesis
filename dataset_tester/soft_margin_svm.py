@@ -21,7 +21,7 @@ C2 = np.diag(0.2 * np.ones((DIM,)))
 def generate_gaussian(m, c, num):
     return np.random.multivariate_normal(m, c, num)
 
-NUM = 500
+NUM = 3
 # generate 50 points from gaussian 1
 x1 = generate_gaussian(M1, C1, NUM)
 # labels
@@ -52,7 +52,12 @@ b = cvxopt_matrix(np.zeros(1))
 #Run solver
 sol = cvxopt_solvers.qp(Q, q, G, h, A, b)
 alphas = np.array(sol['x'])
-
+print("alpha", alphas)
+print(Q)
+print(A)
+print(G)
+print(h)
+print(b)
 #==================Computing and printing parameters===============================#
 w = ((y * alphas).T @ X).reshape(-1,1)
 S = (alphas > 1e-4).flatten()
@@ -96,4 +101,3 @@ plt.title('Soft Margin SVM')
 plt.legend()
 plt.grid(True)
 plt.show()
-

@@ -183,7 +183,7 @@ class Trainer:
         for i, data in enumerate(dataloader):
             data = data.to(self.device)
             vals = model(data)
-            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=True).detach().cpu().numpy()))
+            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False).detach().cpu().numpy())) #TODO: look for changes (default False)
 
         return np.concatenate(obj_gap, axis=0)
 
@@ -208,7 +208,7 @@ class Trainer:
 
             cons_gap_eq.append(np.abs(constraint_violation_eq.detach().cpu().numpy()))
             cons_gap_uq.append(np.abs(constraint_violation_uq.detach().cpu().numpy()))
-            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=True).detach().cpu().numpy()))
+            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False).detach().cpu().numpy())) #TODO: look for changes (default False)
 
         obj_gap = np.concatenate(obj_gap, axis=0)
         cons_gap_eq = np.concatenate(cons_gap_eq, axis=0)

@@ -30,7 +30,7 @@ def args_parser():
     parser.add_argument('--use_wandb', type=str, default='True')
 
     # ipm processing
-    parser.add_argument('--ipm_steps', type=int, default=8) #TODO change to 8
+    parser.add_argument('--ipm_steps', type=int, default=8)
     parser.add_argument('--ipm_alpha', type=float, default=0.9)
 
     # training dynamics
@@ -38,7 +38,7 @@ def args_parser():
     parser.add_argument('--runs', type=int, default=1)
     parser.add_argument('--lr', type=float, default=1.e-3)
     parser.add_argument('--weight_decay', type=float, default=0.)
-    parser.add_argument('--epoch', type=int, default=4)
+    parser.add_argument('--epoch', type=int, default=300)
     parser.add_argument('--patience', type=int, default=100)
     parser.add_argument('--batchsize', type=int, default=16)
     parser.add_argument('--micro_batch', type=int, default=1)
@@ -63,10 +63,10 @@ def args_parser():
 
 
 if __name__ == '__main__':
-    #log_folder: str = "../../../../work/log1/darius.weber/logs"
-    #wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
-    log_folder: str = "logs"
-    wandb_folder: str = "wandb"
+    log_folder: str = "../../../../work/log1/darius.weber/logs"
+    wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
+    # log_folder: str = "logs"
+    # wandb_folder: str = "wandb"
     args = args_parser()
     args = args_set_bool(vars(args))
     args = ConfigDict(args)  # convert for wandb and yaml
