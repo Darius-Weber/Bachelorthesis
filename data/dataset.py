@@ -87,12 +87,17 @@ class QPDataset(InMemoryDataset):
                 A = torch.from_numpy(np.array(A_cvx)).to(torch.float)
                 b = torch.from_numpy(np.array(b_cvx)).to(torch.float)
                 S = torch.from_numpy(np.array(S_cvx)).to(torch.float)
-                
-                #TODO look if sparse works. Maybe not every matrix should be sparse
+
+                # merge inequality constrain matrix G with equality constrain matrix A:
+                qp_constraintmatrix = torch.vstack((A, G))
+                qp_constraints = torch.vstack((b, h))
+
                 sp_Q = SparseTensor.from_dense(Q, has_value=True)
                 sp_G = SparseTensor.from_dense(G, has_value=True)
                 sp_A = SparseTensor.from_dense(A, has_value=True)
                 sp_S = SparseTensor.from_dense(S, has_value=True)
+                sp_q = SparseTensor.from_dense(q, has_value=True)
+                sp_qp_constraints = SparseTensor.from_dense(qp_constraints, has_value=True)
 
                 row_Q = sp_Q.storage._row
                 col_Q = sp_Q.storage._col
@@ -110,28 +115,13 @@ class QPDataset(InMemoryDataset):
                 col_S = sp_S.storage._col
                 val_S = sp_S.storage._value
 
-                #if self.using_ineq:
-                #This tilde_mask could help while filtering or selecting specific elements/columns in tensor A based on this computed boolean mask.
-                #    tilde_mask = torch.ones(row.shape, dtype=torch.bool)
-                #else:
-                #   tilde_mask = col < (A.shape[1] - A.shape[0])
+                row_q = sp_q.storage._row
+                col_q = sp_q.storage._col
+                val_q = sp_q.storage._value
 
-                #c = c / (c.abs().max() + 1.e-10)  # does not change the result
-
-                # merge inequality constrain matrix G with erquality constrain matrix A:
-                qp_constraintmatrix = torch.vstack((G, A))
-                qp_constraints = torch.vstack((h, b))
-
-                # Size of number of constrains x number of objectives (+1 because of O1!)
-                stackco = generate_matrix(qp_constraintmatrix.shape[0],
-                                          S.shape[1] + 1)
-                stackoc = swap_rows(stackco, 0, 1)
-                oc_edge_attr = torch.cat((qp_constraints, torch.zeros(stackco.shape[1] - qp_constraintmatrix.shape[0],
-                                                                      1)))  #h,b for O1 and rest 0 for O2 to On
-                stackvo = generate_matrix(q.shape[0],
-                                          S.shape[1] + 1)
-                stackov = swap_rows(stackvo, 0, 1)
-                ov_edge_attr = torch.cat((q, S.t().flatten().unsqueeze(1)))
+                row_sp_qp_constraints = sp_qp_constraints.storage._row
+                col_sp_qp_constraints = sp_qp_constraints.storage._col
+                val_sp_qp_constraints = sp_qp_constraints.storage._value
 
                 x_values = [iteration['x'] for iteration in sol['intermediate']]
                 x = np.stack(x_values, axis=1)
@@ -147,76 +137,37 @@ class QPDataset(InMemoryDataset):
                 if (self.ipm_steps - x.shape[1]>0):
                     x = np.hstack((x, np.repeat(x[:, -1:], self.ipm_steps - x.shape[1], axis=1)))
 
+                # loses some precision
                 gt_primals = torch.from_numpy(x).to(torch.float)
-                # Dual Solution for inequality constraints
-                #z = np.array(sol['z'])
 
-                # Dual Solution for equality constraints
-                #y = np.array(sol['y'])
-                # gt_slacks = np.array(sol['s'])
-                stacked_tensor = torch.cat([
-                    torch.cat([q.mean(0, keepdim=True), q.std(0, keepdim=True)], dim=0).squeeze().unsqueeze(0),
-                    torch.cat([S.mean(0, keepdims=True), S.std(0, keepdims=True)], dim=0).T
-                ], dim=0)
-                #print("cons", torch.cat([qp_constraintmatrix.mean(1, keepdim=True),
-                                          #qp_constraintmatrix.std(1, keepdim=True)], dim=1))
-                #print(qp_constraintmatrix.shape)
-                #print(A.shape)
-                #print(G.shape)
-                #print("vals", torch.cat([qp_constraintmatrix.mean(0, keepdim=True),
-                                          #qp_constraintmatrix.std(0, keepdim=True)], dim=0).T)
-                #print(S.shape)
-                #print(qp_constraints.shape)
-                #print("obj",stacked_tensor)
-                #print("qp_constraints", qp_constraints)
-                #print("S",S)
-                #print("q",q)
-                #print("qp_constrainmatrix", qp_constraintmatrix)
-
-                #print("cons__to__obj_EDGE_index", stackco)
-                #print("cons__to__obj_EDGE_attr", oc_edge_attr)
-
-                #print("obj__to__cons_EDGE_index", stackoc)
-                #print("obj__to__cons_EDGE_attr", oc_edge_attr)
-
-                #print("obj__to__vals=_EDGE_index", stackov)
-                #print("obj__to__vals=EDGE_attr", ov_edge_attr)
-
-                #print("vals__to__obj_EDGE_index", stackvo)
-                #print("vals__to__obj_EDGE_attr", ov_edge_attr)
-                #print("Q",Q)
                 # TODO evtl. consider SVD instead of mean and std
                 data = HeteroData(
                     #node features
                     cons={'x': torch.cat([qp_constraintmatrix.mean(1, keepdim=True),
-                                          qp_constraintmatrix.std(1, keepdim=True)], dim=1)}, #RIGHT
+                                          qp_constraintmatrix.std(1, keepdim=True)], dim=1)},
                     vals={'x': torch.cat([qp_constraintmatrix.mean(0, keepdim=True),
-                                          qp_constraintmatrix.std(0, keepdim=True)], dim=0).T},#RIGHT
-                    obj={'x': stacked_tensor},#RIGHT
+                                          qp_constraintmatrix.std(0, keepdim=True)], dim=0).T},
+                    obj={'x': torch.cat([torch.cat([q.mean(0, keepdim=True), q.std(0, keepdim=True)], dim=0).squeeze().unsqueeze(0),
+                                torch.cat([S.mean(0, keepdims=True), S.std(0, keepdims=True)], dim=0).T], dim=0)},
 
                     #edges
-                    cons__to__vals={'edge_index': torch.vstack(torch.where(qp_constraintmatrix)),#RIGHT
-                                    #row and column indices where 0 values left out
-                                    'edge_attr': qp_constraintmatrix[torch.where(qp_constraintmatrix)][:, None]},#RIGHT
-                    #values from qp_constraintmatrix where 0 is left out
-                    vals__to__cons={'edge_index': torch.vstack(torch.where(qp_constraintmatrix.T)),#RIGHT
-                                    'edge_attr': qp_constraintmatrix.T[torch.where(qp_constraintmatrix.T)][:, None]},#RIGHT
+                    cons__to__vals={'edge_index': torch.vstack(torch.where(qp_constraintmatrix)),
+                                    'edge_attr': qp_constraintmatrix[torch.where(qp_constraintmatrix)][:, None]},
+                    vals__to__cons={'edge_index': torch.vstack(torch.where(qp_constraintmatrix.T)),
+                                    'edge_attr': qp_constraintmatrix.T[torch.where(qp_constraintmatrix.T)][:, None]},
 
 
                     # TODO make it more sparse for cons__to__obj and obj__to__cons
-                    cons__to__obj={'edge_index': stackco, #RIGHT
-                                   'edge_attr': oc_edge_attr}, #RIGHT
-                    obj__to__cons={'edge_index': stackoc, #RIGHT
-                                   'edge_attr': oc_edge_attr}, #RIGHT
-                    obj__to__vals={'edge_index': stackov, #RIGHT
-                                   'edge_attr': ov_edge_attr}, #RIGHT
-                    vals__to__obj={'edge_index': stackvo, #RIGHT
-                                   'edge_attr': ov_edge_attr}, #RIGHT
+                    cons__to__obj={'edge_index': torch.stack((row_sp_qp_constraints, col_sp_qp_constraints)),
+                                   'edge_attr': val_sp_qp_constraints[:,None]},
+                    obj__to__cons={'edge_index': torch.stack((col_sp_qp_constraints, row_sp_qp_constraints)),
+                                   'edge_attr': val_sp_qp_constraints[:,None]},
+                    obj__to__vals={'edge_index':  torch.stack((torch.hstack((col_q, col_S+1)), torch.hstack((row_q, row_S)))),
+                                   'edge_attr': torch.hstack((val_q, val_S))[:,None]},
+                    vals__to__obj={'edge_index':  torch.stack((torch.hstack((row_q, row_S)),torch.hstack((col_q, col_S+1)))),
+                                   'edge_attr': torch.hstack((val_q, val_S))[:,None]},
                     gt_primals=gt_primals,
-                    # gt_duals=gt_duals,
-                    # gt_slacks=gt_slacks,
-                    obj_value=torch.tensor(sol['primal objective'], dtype=torch.float32), # changed
-                    #obj_const=c,
+                    obj_value=torch.tensor(sol['primal objective'], dtype=torch.float32),
                     q=q,
                     h=h,
                     b=b,
@@ -246,7 +197,6 @@ class QPDataset(InMemoryDataset):
                     S_num_col=S.shape[1],
                     GA_num_row=qp_constraintmatrix.shape[0],
                     GA_num_col=qp_constraintmatrix.shape[1],
-                    #A_tilde_mask=tilde_mask,
                     rhs=qp_constraints)
 
                 data_list.append(data)

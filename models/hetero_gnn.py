@@ -129,7 +129,7 @@ class TripartiteHeteroGNN(torch.nn.Module):
         x_dict, edge_index_dict, edge_attr_dict = data.x_dict, data.edge_index_dict, data.edge_attr_dict
         for k in ['cons', 'vals', 'obj']:
             x_emb = self.encoder[k](x_dict[k])  # from dataset apply MLP to 'cons', 'vals' or 'obj'
-            x_dict[k] = x_emb  # safe applied LP in x_dict
+            x_dict[k] = x_emb  # safe applied QP in x_dict
 
         hiddens = []
         for i in range(self.num_layers):
