@@ -145,8 +145,6 @@ class Trainer:
     def get_obj_metric(self, data, pred, hard_non_negative=False):
         # if hard_non_negative, we need a relu to make x all non-negative
         # just for metric usage, not for training
-        #ABSOLUTE OBJECTIVE GAP
-        # TODO: Look if it really does what it should!
 
         pred = pred[:, -self.ipm_steps:]
         if hard_non_negative:
@@ -157,74 +155,31 @@ class Trainer:
         c_times_xgt = data.q[:, None] * x_gt
         obj_gt_c = scatter(c_times_xgt, data['vals'].batch, dim=0, reduce='sum')
 
-        #print("size", x_gt.shape)
-        #print("c",data.q[:, None])
-        #print("c shape", data.q[:, None].shape)
-        #print("c_times_xgt", c_times_xgt)
-        #print("size", c_times_x.shape)
-        #print("obj_gt_c", obj_gt_c)
-        #print("size", obj_gt_c.shape)
-        #print("pred", pred)
-        #print("predsize", pred.size)
-        #print("xQx in scatter:",pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :])
-        #print("row:", data.Q_row.T)
-        #print("val batch:",data['vals'].batch.T)
-        #TODO: Look what is better
-        #print("xQx_pred", pred[data.Q_col, :])
-        #xQx_pred = scatter(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], data.Q_row, reduce='sum', dim=0, dim_size=data['vals'].batch.shape[0])
-        #xQx_pred = torch.sum(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], axis=0)
-        #xQx_gt = scatter(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], data.Q_row, reduce='sum', dim=0, dim_size=data['vals'].batch.shape[0])
-        #print("batch",data['vals'].batch)
-        #print("Row", data.Q_row)
-        #print("col", data.Q_col)
-        #print("val", data.Q_val[:, None])
-        #print("data.Q_col", x_gt[data.Q_col, :])
-        #print("data.Q_row", x_gt[data.Q_row, :])
-        #print("mul", x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :])
-        #print("mul_shape",(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :]).shape)
-        #-------------------------------------------IMPORTANT-------------------------------------------#
-        #Is this correct? I checked it manually and it should do it correctly, but it is complicated (at least) for me to check it for the general case.
-        xQx_pred_Q = scatter(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], data.Q_row,
-                         reduce='sum', dim=0, dim_size=data['vals'].batch.shape[0])
-        xQx_pred = scatter(xQx_pred_Q, data['vals'].batch, dim=0, reduce='sum')
+        slice = data._slice_dict['Q_val']
+        num_nonzero_Q = slice[1:] - slice[:-1]
+        Q_batch = torch.arange(len(num_nonzero_Q)).repeat_interleave(num_nonzero_Q)
+        xQx_pred = scatter(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], Q_batch, reduce='sum', dim=0)
 
-        xQx_gt_Q = scatter(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], data.Q_row,
-                         reduce='sum', dim=0, dim_size=data['vals'].batch.shape[0])
+        xQx_gt = scatter(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], Q_batch, reduce='sum', dim=0)
 
-        xQx_gt = scatter(xQx_gt_Q, data['vals'].batch, dim=0, reduce='sum')
+        #xQx_gt = scatter(xQx_gt_Q, data['vals'].batch, dim=0, reduce='sum')
+
         obj_pred = obj_pred_c + xQx_pred
         obj_gt = obj_gt_c + xQx_gt
-        # --------------------------------important---------------------------#
+        #print("obj_value",data.obj_value)
+        #print("obj_gt_c", obj_gt_c)
+        #print("obj_pred",obj_pred)
+        #print("obj_gt",obj_gt)
 
-        print("data", data)
-        print("x_gt", x_gt)
-        print("before scatter_pred", xQx_pred_Q)
-        print("after scatter_pred batch", xQx_pred)
-        print("before scatter_gt", xQx_gt_Q)
-        print("after scatter_gt batch", xQx_gt)
-        #print("scatter xQx_gt", xQx_gt)
-        #print("scatter xQx_gt shape", xQx_gt.shape)
-        #, dim_size=data['vals'].batch.shape[0]
-        #print("data:",data)
-        #print("xQx_pred", xQx_pred)
-        #print("xQx_gt", xQx_gt)
-       # xQx_gt = torch.sum(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], axis=0)
-
-        #--------------------------------important---------------------------#
-        print("obj_value",data.obj_value)
-        print("obj_gt_c", obj_gt_c)
-        print("obj_pred",obj_pred)
-        print("obj_gt",obj_gt)
-
-        print("obj_gap",(obj_pred - obj_gt)/(obj_gt+1e-5)) #This can be a really high value because obj_gt is sometimes very small (e.g. with softmargin svm). Therefore, there is also a high train loss.
-        print("obj_diff",(obj_pred - obj_gt)) #not normalized
+        #print("obj_gap",(obj_pred - obj_gt)/(obj_gt+1e-5)) #This can be a really high value because obj_gt is sometimes very small (e.g. with softmargin svm). Therefore, there is also a high train loss.
+        #print("obj_diff",(obj_pred - obj_gt)) #not normalized
 
         #Suggestions for a different normalization:
-        print("tanh", torch.tanh((obj_pred - obj_gt))) #Good for getting small train loss, but (high) difference is cut to 1, -1
-        print("log+1", torch.log1p(torch.abs(obj_pred - obj_gt))) #(high) difference is not cutted, but again leads to higher train loss, but not astronomically high (more between 0-100)
+        #print("tanh", torch.tanh((obj_pred - obj_gt))) #Good for getting small train loss, but (high) difference is cut to 1, -1
+        #print("log+1", torch.log1p(torch.abs(obj_pred - obj_gt))) #(high) difference is not cutted, but again leads to higher train loss, but not astronomically high (more between 0-100)
         #return (obj_pred - obj_gt) / (obj_gt + 1e-5)
-        print("log+1 scaled",torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max()) #(high) difference is not cut up, and train loss is in the range of (0-10)
-        return torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max()#(obj_gt+1e-5)
+        #print("log+1 scaled",torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()) #(high) difference is not cut up, and train loss is in the range of (0-10) (own implementation)
+        return torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()#(obj_gt+1e-5)
         #--------------------------Important----------------------------------#
     def obj_metric(self, dataloader, model):
         model.eval

@@ -14,31 +14,14 @@ from tqdm import tqdm
 
 
 #https://pytorch-geometric.readthedocs.io/en/latest/tutorial/create_dataset.html
-def generate_matrix(c, o):
-    row1 = torch.arange(c).unsqueeze(0).repeat(o, 1).flatten()
-    row2 = torch.arange(o).unsqueeze(1).repeat(1, c).flatten()
-    matrix = torch.stack((row1, row2))
-    return matrix
+def remove_zero_columns(S):
+    # Compute a boolean mask where each element is True if the corresponding column is not a zero column
+    mask = torch.any(S != 0, dim=0)
 
-# Function to convert PyTorch tensor to cvxopt matrix
-def torch_to_cvxopt(tensor):
-    return cvxopt_matrix(tensor.numpy())
+    # Use the mask to select the non-zero columns
+    S_reduced = S[:, mask]
 
-def swap_rows(tensor, idx1, idx2):
-    """
-    Swap two rows in a tensor.
-
-    Parameters:
-    tensor (torch.Tensor): The tensor where rows will be swapped
-    idx1, idx2 (int, int): The indices of the rows to be swapped
-
-    Returns:
-    torch.Tensor: The tensor after swapping the rows
-    """
-    #TODO make it maybe more efficient
-    t = tensor.clone()  # make a copy of the original tensor
-    t[idx1], t[idx2] = tensor[idx2].clone(), tensor[idx1].clone()
-    return t
+    return S_reduced
 
 class QPDataset(InMemoryDataset):
 
@@ -86,8 +69,8 @@ class QPDataset(InMemoryDataset):
                 h = torch.from_numpy(np.array(h_cvx)).to(torch.float)
                 A = torch.from_numpy(np.array(A_cvx)).to(torch.float)
                 b = torch.from_numpy(np.array(b_cvx)).to(torch.float)
-                S = torch.from_numpy(np.array(S_cvx)).to(torch.float)
-
+                S_dense = torch.from_numpy(np.array(S_cvx)).to(torch.float)
+                S = remove_zero_columns(S_dense)
                 # merge inequality constrain matrix G with equality constrain matrix A:
                 qp_constraintmatrix = torch.vstack((A, G))
                 qp_constraints = torch.vstack((b, h))
@@ -97,7 +80,6 @@ class QPDataset(InMemoryDataset):
                 sp_A = SparseTensor.from_dense(A, has_value=True)
                 sp_S = SparseTensor.from_dense(S, has_value=True)
                 sp_q = SparseTensor.from_dense(q, has_value=True)
-                sp_qp_constraints = SparseTensor.from_dense(qp_constraints, has_value=True)
 
                 row_Q = sp_Q.storage._row
                 col_Q = sp_Q.storage._col
@@ -119,9 +101,6 @@ class QPDataset(InMemoryDataset):
                 col_q = sp_q.storage._col
                 val_q = sp_q.storage._value
 
-                row_sp_qp_constraints = sp_qp_constraints.storage._row
-                col_sp_qp_constraints = sp_qp_constraints.storage._col
-                val_sp_qp_constraints = sp_qp_constraints.storage._value
                 #print(sol['intermediate'])
                 x_values = [iteration['x'] for iteration in sol['intermediate']]
                 x = np.stack(x_values, axis=1)
@@ -171,10 +150,10 @@ class QPDataset(InMemoryDataset):
 
 
                     # TODO make it more sparse for cons__to__obj and obj__to__cons
-                    cons__to__obj={'edge_index': torch.stack((row_sp_qp_constraints, col_sp_qp_constraints)),
-                                   'edge_attr': val_sp_qp_constraints[:,None]},
-                    obj__to__cons={'edge_index': torch.stack((col_sp_qp_constraints, row_sp_qp_constraints)),
-                                   'edge_attr': val_sp_qp_constraints[:,None]},
+                    cons__to__obj={'edge_index': torch.stack([torch.arange(qp_constraints.shape[0]), torch.zeros(qp_constraints.shape[0])]).int(),
+                                   'edge_attr': qp_constraints},
+                    obj__to__cons={'edge_index': torch.stack([torch.zeros(qp_constraints.shape[0]), torch.arange(qp_constraints.shape[0])]).int(),
+                                   'edge_attr': qp_constraints},
                     obj__to__vals={'edge_index':  torch.stack((torch.hstack((col_q, col_S+1)), torch.hstack((row_q, row_S)))),
                                    'edge_attr': torch.hstack((val_q, val_S))[:,None]},
                     vals__to__obj={'edge_index':  torch.stack((torch.hstack((row_q, row_S)),torch.hstack((col_q, col_S+1)))),
@@ -196,20 +175,20 @@ class QPDataset(InMemoryDataset):
                     A_col=col_A,
                     A_val=val_A,
                     A_nnz=len(val_A),
-                    S_row=row_S,
-                    S_col=col_S,
-                    S_val=val_S,
-                    S_nnz=len(val_S),
+                   # S_row=row_S,
+                   # S_col=col_S,
+                   # S_val=val_S,
+                   # S_nnz=len(val_S),
                     A_num_row=A.shape[0],
                     A_num_col=A.shape[1],
                     G_num_row=G.shape[0],
                     G_num_col=G.shape[1],
                     Q_num_row=Q.shape[0],
                     Q_num_col=Q.shape[1],
-                    S_num_row=S.shape[0],
-                    S_num_col=S.shape[1],
-                    GA_num_row=qp_constraintmatrix.shape[0],
-                    GA_num_col=qp_constraintmatrix.shape[1],
+                    #S_num_row=S.shape[0],
+                    #S_num_col=S.shape[1],
+                    #GA_num_row=qp_constraintmatrix.shape[0],
+                    #GA_num_col=qp_constraintmatrix.shape[1],
                     rhs=qp_constraints.squeeze(1))
 
                 data_list.append(data)
