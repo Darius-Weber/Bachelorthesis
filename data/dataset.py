@@ -122,24 +122,37 @@ class QPDataset(InMemoryDataset):
                 row_sp_qp_constraints = sp_qp_constraints.storage._row
                 col_sp_qp_constraints = sp_qp_constraints.storage._col
                 val_sp_qp_constraints = sp_qp_constraints.storage._value
-
+                #print(sol['intermediate'])
                 x_values = [iteration['x'] for iteration in sol['intermediate']]
                 x = np.stack(x_values, axis=1)
                 x = x.reshape(x.shape[0], -1) # should work!
-
+                #print("x", x)
                 # padding is a matrix that repeats the last element of each row.
                 # Need it because x must be the same size for all instances. As
                 # ipm can have different iterations for each instance, we need to pad
                 if (max_ipm_steps+1 - x.shape[1] > 0):
+                    #print("TRUE1")
                     x = np.hstack((x, np.repeat(x[:, -1:], max_ipm_steps+1 - x.shape[1], axis=1)))
 
                 # look that number of ipm steps given is not smaller than the actual number of steps:
                 if (self.ipm_steps - x.shape[1]>0):
+                    #print("TRUE2")
                     x = np.hstack((x, np.repeat(x[:, -1:], self.ipm_steps - x.shape[1], axis=1)))
 
+                primal = x[:, -self.ipm_steps:]
+                #print("primal", primal)
                 # loses some precision
-                gt_primals = torch.from_numpy(x).to(torch.float)
-
+                gt_primals = torch.from_numpy(primal).to(torch.float)
+                #print("Q",Q)
+                #print("Q_shape", Q.shape)
+                #print("c",q.squeeze(1))
+                #print("c_shape", q.squeeze(1).shape)
+                #print("h",h.squeeze(1))
+                #print("h_shape", h.squeeze(1).shape)
+                #print("b",b.squeeze(1))
+                #print("b_shape", b.squeeze(1).shape)
+                #print("qp_constraints", qp_constraints)
+               #print("qp_constraints shape", qp_constraints.shape)
                 # TODO evtl. consider SVD instead of mean and std
                 data = HeteroData(
                     #node features
@@ -168,9 +181,9 @@ class QPDataset(InMemoryDataset):
                                    'edge_attr': torch.hstack((val_q, val_S))[:,None]},
                     gt_primals=gt_primals,
                     obj_value=torch.tensor(sol['primal objective'], dtype=torch.float32),
-                    q=q,
-                    h=h,
-                    b=b,
+                    q=q.squeeze(1),
+                    h=h.squeeze(1),
+                    b=b.squeeze(1),
                     Q_row=row_Q,
                     Q_col=col_Q,
                     Q_val=val_Q,
@@ -197,7 +210,7 @@ class QPDataset(InMemoryDataset):
                     S_num_col=S.shape[1],
                     GA_num_row=qp_constraintmatrix.shape[0],
                     GA_num_col=qp_constraintmatrix.shape[1],
-                    rhs=qp_constraints)
+                    rhs=qp_constraints.squeeze(1))
 
                 data_list.append(data)
             torch.save(Batch.from_data_list(data_list), osp.join(self.processed_dir, f'batch{i}.pt'))

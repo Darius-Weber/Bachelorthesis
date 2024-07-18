@@ -13,6 +13,8 @@ def args_set_bool(args: Dict):
 
 def collate_fn_ip(graphs: List[HeteroData]):
     new_batch = Batch.from_data_list(graphs)
+    #print("Q_num_row:", new_batch.Q_num_row)
+    #print("Q_nnz:", new_batch.Q_nnz)
     #with open('debug.txt', 'a') as f:
     #    print("Batch",new_batch, file=f)
     #TODO look over this again. Get rid of some definitions
@@ -25,7 +27,6 @@ def collate_fn_ip(graphs: List[HeteroData]):
     col_bias_Q = torch.hstack([new_batch.Q_num_col.new_zeros(1), new_batch.Q_num_col[:-1]]).cumsum(dim=0)
     col_bias_Q = torch.repeat_interleave(col_bias_Q, new_batch.Q_nnz)
     new_batch.Q_col += col_bias_Q
-
     #for G
     row_bias_G = torch.hstack([new_batch.G_num_row.new_zeros(1), new_batch.G_num_row[:-1]]).cumsum(dim=0)
     row_bias_G = torch.repeat_interleave(row_bias_G, new_batch.G_nnz)
