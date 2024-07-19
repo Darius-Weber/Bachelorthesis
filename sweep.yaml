@@ -19,8 +19,7 @@ parameters:
     min: 0.15
     distribution: uniform
   num_mlp_layers: #fix to 2
-    values: 2
-    distribution: categorical
+    value: 2
   loss_weight_x: #fix to 1
     value: 1
   weight_decay: #0
