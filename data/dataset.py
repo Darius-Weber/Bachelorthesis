@@ -9,7 +9,7 @@ import torch
 from torch_geometric.data import Batch, HeteroData, InMemoryDataset
 from torch_sparse import SparseTensor
 from cvxopt import matrix as cvxopt_matrix
-from solver.qp import qp
+from solver import qp
 from tqdm import tqdm
 
 
@@ -62,7 +62,8 @@ class QPDataset(InMemoryDataset):
             for ip_idx in tqdm(range(len(ip_pkgs))):
                 (Q_cvx, q_cvx, G_cvx, h_cvx, A_cvx, b_cvx, S_cvx, max_ipm_steps) = ip_pkgs[ip_idx]
                 # Solve the quadratic program
-                sol = qp(Q_cvx, q_cvx, G_cvx, h_cvx, A_cvx, b_cvx, callback=lambda res: res)
+                qp.options['show_progress'] = False
+                sol = qp.qp(Q_cvx, q_cvx, G_cvx, h_cvx, A_cvx, b_cvx, callback=lambda res: res)
                 Q = torch.from_numpy(np.array(Q_cvx)).to(torch.float)
                 q = torch.from_numpy(np.array(q_cvx)).to(torch.float)
                 G = torch.from_numpy(np.array(G_cvx)).to(torch.float)

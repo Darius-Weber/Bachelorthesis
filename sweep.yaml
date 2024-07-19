@@ -18,8 +18,8 @@ parameters:
     max: 10
     min: 0.15
     distribution: uniform
-  num_mlp_layers:
-    values: [2, 4]
+  num_mlp_layers: #fix to 2
+    values: 2
     distribution: categorical
   loss_weight_x: #fix to 1
     value: 1
@@ -45,7 +45,13 @@ parameters:
       - gcnconv
       - genconv
     distribution: categorical
+  losstype:
+    values:
+      - l1
+      - l2
+    distribution: categorical
   lr:
     value: 0.001
   datapath:
     value: '../../../../work/log1/darius.weber/Quadratic_Programming_Datasets'
+run_cap: 50
