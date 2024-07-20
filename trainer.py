@@ -113,7 +113,14 @@ class Trainer:
             cons_loss = (self.loss_func(constraint_gap_eq) * self.step_weight).mean() + (self.loss_func(constraint_gap_uq) * self.step_weight).mean()
             loss = loss + cons_loss * self.loss_weight['constraint']
         return loss
-
+    def normalized_inverse_scaling(tensor, epsilon=1e-8):
+        inv_scaled_tensor = 1 / (tensor + epsilon)
+        min_val = inv_scaled_tensor.min()
+        max_val = inv_scaled_tensor.max()
+        range_val = max_val - min_val
+        range_val = range_val if range_val > 0 else 1
+        normalized_tensor = (inv_scaled_tensor - min_val) / range_val
+        return normalized_tensor
     def get_constraint_violation_uq(self, pred, data):
         """
         Gx - h
@@ -125,6 +132,18 @@ class Trainer:
         pred = pred[:, -self.ipm_steps:]
         Gx = scatter(pred[data.G_col, :] * data.G_val[:, None], data.G_row, reduce='sum', dim=0, dim_size=data.h[:, None].shape[0])
         constraint_gap = torch.relu(Gx - data.h[:, None])
+        # Normalize constraint_violation_uq
+        # Logarithmic scaling for constraint_violation_uq
+        #print("before log",constraint_gap)
+        if constraint_gap.numel() > 0:
+            log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
+        #    max_log_scaled_gap = log_scaled_gap.max()
+        #    if max_log_scaled_gap > 0:
+        #        log_scaled_gap = log_scaled_gap / max_log_scaled_gap.detach()
+        #        print("logscaled", log_scaled_gap)
+        #    print("after log", log_scaled_gap)
+            return log_scaled_gap
+        #print("constraint_gap",constraint_gap)
         return constraint_gap
 
     def get_constraint_violation_eq(self, pred, data):
@@ -140,6 +159,18 @@ class Trainer:
 
         constraint_gap = Ax - data.b[:, None]
         #print("gap-eq",constraint_gap)
+        # Normalize constraint_violation_eq
+        # Logarithmic scaling for constraint_violation_eq
+        #print("before log eq", constraint_gap)
+        if constraint_gap.numel() > 0:
+            log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
+        #    max_log_scaled_gap = log_scaled_gap.max()
+        #    if max_log_scaled_gap > 0:
+        #        log_scaled_gap = log_scaled_gap / max_log_scaled_gap.detach()
+        #        print("logscaled", log_scaled_gap)
+            #print("after log", log_scaled_gap)
+            return log_scaled_gap
+        #print("constraint_gap",constraint_gap)
         return constraint_gap
 
     def get_obj_metric(self, data, pred, hard_non_negative=False):
@@ -179,7 +210,21 @@ class Trainer:
         #print("log+1", torch.log1p(torch.abs(obj_pred - obj_gt))) #(high) difference is not cutted, but again leads to higher train loss, but not astronomically high (more between 0-100)
         #return (obj_pred - obj_gt) / (obj_gt + 1e-5)
         #print("log+1 scaled",torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()) #(high) difference is not cut up, and train loss is in the range of (0-10) (own implementation)
-        return torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()#(obj_gt+1e-5)
+        
+        #obj_diff = obj_pred - obj_gt
+        #max_obj_diff = obj_diff.abs().max()
+        #if max_obj_diff > 0:
+        #    obj_diff = obj_diff / max_obj_diff.detach()
+        #return obj_diff
+        #return torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()#(obj_gt+1e-5)
+        obj_diff = obj_pred - obj_gt
+        #print("before obj_diff")
+        log_scaled_diff = torch.log1p(torch.abs(obj_diff))
+        #print("after obj_dif", log_scaled_diff)
+        #max_log_scaled_diff = log_scaled_diff.max()
+        #if max_log_scaled_diff > 0:
+        #    log_scaled_diff = log_scaled_diff / max_log_scaled_diff.detach()
+        return log_scaled_diff
         #--------------------------Important----------------------------------#
     def obj_metric(self, dataloader, model):
         model.eval
