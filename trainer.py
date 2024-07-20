@@ -181,7 +181,7 @@ class Trainer:
 
         slice = data._slice_dict['Q_val']
         num_nonzero_Q = slice[1:] - slice[:-1]
-        Q_batch = torch.arange(len(num_nonzero_Q)).repeat_interleave(num_nonzero_Q)
+        Q_batch = torch.arange(len(num_nonzero_Q)).repeat_interleave(num_nonzero_Q).to(self.device)
         xQx_pred = scatter(pred[data.Q_col, :] * data.Q_val[:, None] * pred[data.Q_row, :], Q_batch, reduce='sum', dim=0)
 
         xQx_gt = scatter(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], Q_batch, reduce='sum', dim=0)
