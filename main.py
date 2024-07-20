@@ -149,7 +149,7 @@ if __name__ == '__main__':
             train_loss = trainer.train(train_loader, model, optimizer)
             #print(train_loss)
             with torch.no_grad():
-                # val_loss = trainer.eval(val_loader, model, scheduler)
+                val_loss = trainer.eval(val_loader, model, scheduler)
                 #train metric
                 train_gaps, train_constraint_gap_eq, train_constraint_gap_uq = trainer.eval_metrics(train_loader, model)
                 train_mean_gap = train_gaps[:, -1].mean().item()
@@ -180,12 +180,12 @@ if __name__ == '__main__':
             if trainer.patience > args.patience:
                 break
             pbar.set_postfix({'train_loss': train_loss,
-                              # 'val_loss': val_loss,
+                              'val_loss': val_loss,
                               'val_obj': cur_mean_gap,
                               'val_cons': cur_cons_gap_mean,
                               'lr': scheduler.optimizer.param_groups[0]["lr"]})
             log_dict = {'train_loss': train_loss,
-                        # 'val_loss': val_loss,
+                        'val_loss': val_loss,
                         'train_obj_gap_last_mean': train_mean_gap, #train metrics
                         'train_cons_gap_last_mean': train_cons_gap_mean, #train metrics
                         'train_hybrid_gap': train_mean_gap + train_cons_gap_mean, #train metrics

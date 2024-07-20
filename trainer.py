@@ -210,14 +210,22 @@ class Trainer:
         #    obj_diff = obj_diff / max_obj_diff.detach()
         #return obj_diff
         #return torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()#(obj_gt+1e-5)
-        obj_diff = obj_pred - obj_gt
+        #obj_diff = obj_pred - obj_gt
         #print("before obj_diff")
-        log_scaled_diff = torch.log1p(torch.abs(obj_diff))
+        #obj_diff = obj_pred - obj_gt
+        #print("obj diff", obj_diff)
+        #obj_gap = obj_diff/(1+torch.abs(obj_gt)).detach()
+        #print("denominator", (1+torch.abs(obj_gt)))
+        #print("obj_gap", obj_gap)
+        #log_scaled_diff = torch.log1p(torch.abs(obj_diff))
         #print("after obj_dif", log_scaled_diff)
         #max_log_scaled_diff = log_scaled_diff.max()
         #if max_log_scaled_diff > 0:
         #    log_scaled_diff = log_scaled_diff / max_log_scaled_diff.detach()
-        return log_scaled_diff
+        # Calculate the difference
+        #print("before normalization", torch.log1p(torch.abs(obj_pred - obj_gt)))
+        #print("after", torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1))
+        return torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1).detach()
         #--------------------------Important----------------------------------#
     def obj_metric(self, dataloader, model):
         model.eval
