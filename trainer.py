@@ -113,14 +113,7 @@ class Trainer:
             cons_loss = (self.loss_func(constraint_gap_eq) * self.step_weight).mean() + (self.loss_func(constraint_gap_uq) * self.step_weight).mean()
             loss = loss + cons_loss * self.loss_weight['constraint']
         return loss
-    def normalized_inverse_scaling(tensor, epsilon=1e-8):
-        inv_scaled_tensor = 1 / (tensor + epsilon)
-        min_val = inv_scaled_tensor.min()
-        max_val = inv_scaled_tensor.max()
-        range_val = max_val - min_val
-        range_val = range_val if range_val > 0 else 1
-        normalized_tensor = (inv_scaled_tensor - min_val) / range_val
-        return normalized_tensor
+    
     def get_constraint_violation_uq(self, pred, data):
         """
         Gx - h
