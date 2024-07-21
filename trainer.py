@@ -225,7 +225,9 @@ class Trainer:
         # Calculate the difference
         #print("before normalization", torch.log1p(torch.abs(obj_pred - obj_gt)))
         #print("after", torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1))
-        return torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1).detach()
+        diff = obj_pred - obj_gt
+        return torch.log1p(torch.abs(diff))
+        #return torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1).detach()
         #--------------------------Important----------------------------------#
     def obj_metric(self, dataloader, model):
         model.eval
