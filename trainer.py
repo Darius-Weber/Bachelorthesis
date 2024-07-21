@@ -128,14 +128,14 @@ class Trainer:
         # Normalize constraint_violation_uq
         # Logarithmic scaling for constraint_violation_uq
         #print("before log",constraint_gap)
-        if constraint_gap.numel() > 0:
-            log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
+        #if constraint_gap.numel() > 0:
+        #    log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
         #    max_log_scaled_gap = log_scaled_gap.max()
         #    if max_log_scaled_gap > 0:
         #        log_scaled_gap = log_scaled_gap / max_log_scaled_gap.detach()
         #        print("logscaled", log_scaled_gap)
         #    print("after log", log_scaled_gap)
-            return log_scaled_gap
+        #    return log_scaled_gap
         #print("constraint_gap",constraint_gap)
         return constraint_gap
 
@@ -155,14 +155,14 @@ class Trainer:
         # Normalize constraint_violation_eq
         # Logarithmic scaling for constraint_violation_eq
         #print("before log eq", constraint_gap)
-        if constraint_gap.numel() > 0:
-            log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
+        #if constraint_gap.numel() > 0:
+        #    log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
         #    max_log_scaled_gap = log_scaled_gap.max()
         #    if max_log_scaled_gap > 0:
         #        log_scaled_gap = log_scaled_gap / max_log_scaled_gap.detach()
         #        print("logscaled", log_scaled_gap)
             #print("after log", log_scaled_gap)
-            return log_scaled_gap
+        #    return log_scaled_gap
         #print("constraint_gap",constraint_gap)
         return constraint_gap
 
