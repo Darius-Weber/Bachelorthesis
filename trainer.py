@@ -105,7 +105,7 @@ class Trainer:
             loss = loss + primal_loss * self.loss_weight['primal']
         if 'objgap' in self.loss_target:
             obj_loss = (self.loss_func(
-                self.get_obj_metric(data, vals, hard_non_negative=False)) * self.step_weight).mean()
+                self.get_obj_metric(data, vals, hard_non_negative=False)[0]) * self.step_weight).mean()
             loss = loss + obj_loss * self.loss_weight['objgap']
         if 'constrain' in self.loss_target:
             constraint_gap_eq = self.get_constraint_violation_eq(vals, data)
@@ -226,7 +226,7 @@ class Trainer:
         #print("before normalization", torch.log1p(torch.abs(obj_pred - obj_gt)))
         #print("after", torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1))
         diff = obj_pred - obj_gt
-        return torch.log1p(torch.abs(diff))
+        return (torch.log1p(torch.abs(diff)), diff)
         #return torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1).detach()
         #--------------------------Important----------------------------------#
     def obj_metric(self, dataloader, model):
@@ -235,7 +235,7 @@ class Trainer:
         for i, data in enumerate(dataloader):
             data = data.to(self.device)
             vals = model(data)
-            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False).detach().cpu().numpy())) #TODO: look for changes (default False)
+            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False)[0].detach().cpu().numpy())) #TODO: look for changes (default False)
 
         return np.concatenate(obj_gap, axis=0)
 
@@ -252,6 +252,7 @@ class Trainer:
         cons_gap_eq = []
         cons_gap_uq = []
         obj_gap = []
+        obj_diff = []
         for i, data in enumerate(dataloader):
             data = data.to(self.device)
             vals = model(data)
@@ -260,9 +261,10 @@ class Trainer:
 
             cons_gap_eq.append(np.abs(constraint_violation_eq.detach().cpu().numpy()))
             cons_gap_uq.append(np.abs(constraint_violation_uq.detach().cpu().numpy()))
-            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False).detach().cpu().numpy())) #TODO: look for changes (default False)
-
+            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False)[0].detach().cpu().numpy())) #TODO: look for changes (default False)
+            obj_diff.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False)[1].detach().cpu().numpy()))
         obj_gap = np.concatenate(obj_gap, axis=0)
+        obj_diff = np.concatenate(obj_diff, axis=0)
         cons_gap_eq = np.concatenate(cons_gap_eq, axis=0)
         cons_gap_uq = np.concatenate(cons_gap_uq, axis=0)
-        return obj_gap, cons_gap_eq, cons_gap_uq
+        return obj_gap, obj_diff, cons_gap_eq, cons_gap_uq
