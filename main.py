@@ -213,7 +213,7 @@ if __name__ == '__main__':
             test_cons_gap_uq_mean = test_cons_gap_uq[:, -1].mean().item() if val_constraint_gap_uq.shape[0] != 0 else 0
             #obj_gap, cons_gap_eq, cons_gap_uq
         # test_losses.append(test_loss)
-        test_objdiff_mean.append(test_gaps[:, -1].mean().item())
+        test_objdiff_mean.append(test_diff[:, -1].mean().item())
         test_objgap_mean.append(test_gaps[:, -1].mean().item())
         test_consgap_mean.append(test_cons_gap_eq_mean + test_cons_gap_uq_mean)
         wandb.log({'test_objdiff': test_objdiff_mean[-1]})
