@@ -233,13 +233,13 @@ if __name__ == '__main__':
             b = data.b.unsqueeze(1)
             
             # Convert PyTorch tensors to NumPy arrays with float64 type
-            Q_np = Q.numpy().astype(np.float64)
-            q_np = q.numpy().astype(np.float64)
-            G_np = G.numpy().astype(np.float64)
-            h_np = h.numpy().astype(np.float64)
-            A_np = A.numpy().astype(np.float64)
-            b_np = b.numpy().astype(np.float64)
-
+            Q_np = Q.cpu().numpy().astype(np.float64)
+            q_np = q.cpu().numpy().astype(np.float64)
+            G_np = G.cpu().numpy().astype(np.float64)
+            h_np = h.cpu().numpy().astype(np.float64)
+            A_np = A.cpu().numpy().astype(np.float64)
+            b_np = b.cpu().numpy().astype(np.float64)
+            
             # Convert NumPy arrays to cvxopt matrices
             Q_cvx = cvxopt_matrix(Q_np)
             q_cvx = cvxopt_matrix(q_np)
