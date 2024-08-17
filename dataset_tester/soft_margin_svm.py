@@ -1,5 +1,8 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cvxopt import matrix as cvxopt_matrix, uniform as cvxopt_uniform
-from cvxopt import solvers as cvxopt_solvers
+from solver import qp
 import numpy as np
 from matplotlib import pyplot as plt
 #https://xavierbourretsicotte.github.io/SVM_implementation.html
@@ -21,7 +24,7 @@ C2 = np.diag(0.2 * np.ones((DIM,)))
 def generate_gaussian(m, c, num):
     return np.random.multivariate_normal(m, c, num)
 
-NUM = 3
+NUM = 500
 # generate 50 points from gaussian 1
 x1 = generate_gaussian(M1, C1, NUM)
 # labels
@@ -50,54 +53,52 @@ A = cvxopt_matrix(y.reshape(1, -1))
 b = cvxopt_matrix(np.zeros(1))
 # print(np.allclose(np.array(Q), np.array(np.dot(X_dash, X_dash.T))))
 #Run solver
-sol = cvxopt_solvers.qp(Q, q, G, h, A, b)
-alphas = np.array(sol['x'])
-print("alpha", alphas)
-print(Q)
-print(A)
-print(G)
-print(h)
-print(b)
-#==================Computing and printing parameters===============================#
-w = ((y * alphas).T @ X).reshape(-1,1)
-S = (alphas > 1e-4).flatten()
-b = y[S] - np.dot(X[S], w)
+res = qp.qp(Q, q, G, h, A, b, callback=lambda res: res)
+c=1
+showiter = 3
+test = 0
+for sol in res['intermediate']:
+    if (c-1)%showiter==0 or (c-1)==len(res['intermediate'])-1:
+        test+=1
+        alphas = np.array(sol['x'])
+        #==================Computing and printing parameters===============================#
+        w = ((y * alphas).T @ X).reshape(-1,1)
+        S = (alphas > 1e-4).flatten()
+        b = y[S] - np.dot(X[S], w)
 
-#Display results
-print('Alphas = ',alphas[alphas > 1e-4])
-print('w = ', w.flatten())
-print('b = ', b[0])
+        # Getting the separate data points
+        x_pos = X[y.flatten() == 1]
+        x_neg = X[y.flatten() == -1]
 
-# Getting the separate data points
-x_pos = X[y.flatten() == 1]
-x_neg = X[y.flatten() == -1]
+        # Generating a grid for contour plotting
+        x1_range = np.linspace(X[:, 0].min(), X[:, 0].max(), 100)
+        x2_range = np.linspace(X[:, 1].min(), X[:, 1].max(), 100)
+        x1, x2 = np.meshgrid(x1_range, x2_range)
+        X_range = np.c_[x1.ravel(), x2.ravel()]
 
-# Generating a grid for contour plotting
-x1_range = np.linspace(X[:, 0].min(), X[:, 0].max(), 100)
-x2_range = np.linspace(X[:, 1].min(), X[:, 1].max(), 100)
-x1, x2 = np.meshgrid(x1_range, x2_range)
-X_range = np.c_[x1.ravel(), x2.ravel()]
+        # Defining the decision boundary and margins
+        f = lambda x: np.dot(x.flatten(), w.flatten()) + sum(b)/len(b)
+        y_range = np.array([f(x) for x in X_range]).reshape(-1)
 
-# Defining the decision boundary and margins
-f = lambda x: np.dot(x.flatten(), w.flatten()) + sum(b)/len(b)
-y_range = np.array([f(x) for x in X_range]).reshape(-1)
+        fig, ax = plt.subplots()
 
-fig, ax = plt.subplots()
+        # Plotting the decision boundary and margins
+        ax.contour(x1, x2, y_range.reshape(x1.shape), colors='k', levels=[-1, 0, 1], alpha=1,
+                linestyles=['--', '-', '--'])
 
-# Plotting the decision boundary and margins
-ax.contour(x1, x2, y_range.reshape(x1.shape), colors='k', levels=[-1, 0, 1], alpha=1,
-           linestyles=['--', '-', '--'])
+        # Plotting the data points
+        ax.scatter(x_pos[:, 0], x_pos[:, 1], marker='o', color='b', label='Positive +1')
+        ax.scatter(x_neg[:, 0], x_neg[:, 1], marker='x', color='r', label='Negative -1')
 
-# Plotting the data points
-ax.scatter(x_pos[:, 0], x_pos[:, 1], marker='o', color='b', label='Positive +1')
-ax.scatter(x_neg[:, 0], x_neg[:, 1], marker='x', color='r', label='Negative -1')
+        # Support Vectors
+        if ((c-1)==len(res['intermediate'])-1):
+            ax.scatter(X[S][:, 0], X[S][:, 1], s=100, facecolors='none', edgecolors='k', marker='o')
 
-# Support Vectors
-ax.scatter(X[S][:, 0], X[S][:, 1], s=100, facecolors='none', edgecolors='k', marker='o')
-
-plt.xlabel('$x_1$')
-plt.ylabel('$x_2$')
-plt.title('Soft Margin SVM')
-plt.legend()
-plt.grid(True)
-plt.show()
+        plt.xlabel('$x_1$')
+        plt.ylabel('$x_2$')
+        plt.title(rf'$\text{{Soft Margin SVM at IPM iteration }}{c}$')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+    c+=1
+print(test)

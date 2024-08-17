@@ -3,11 +3,14 @@
 #
 # The problem data are different from the book.
 
-from cvxopt import blas, lapack, solvers, matrix, mul
+from cvxopt import blas, lapack, matrix, mul
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from solver import qp
 import cvxopt
 import numpy as np
 from pickle import load
-solvers.options['show_progress'] = True
 try: import pylab
 except ImportError: pylab_installed = False
 else: pylab_installed = True
@@ -25,10 +28,10 @@ def split_positive_semidefinite(Q, tol=1e-10):
     S[np.abs(S) < tol] = 0
     return S
 
-
+qp.options['show_progress'] = True
 # Set dimensions
-m = 2  # number of rows for A (20)
-n = 4  # number of columns for A (30)
+m = 10  # number of rows for A (20)
+n = 20 # number of columns for A (30)
 
 # Generate random A matrix
 A = cvxopt.matrix(np.random.randn(m, n))
@@ -77,14 +80,8 @@ for alpha in alphas:
     #    subject to  ||x||_1 <= alpha
 
     h[-1] = alpha
-    print("P = ", P)
-    print("S = ", S)
-    print("q = ", q)
-    print("G = ", G)
-    print("h = ", h)
     
-    x = solvers.qp(P, q, G, h)['x'][:n]
-    print("ad",x)
+    x = qp.qp(P, q, G, h)['x'][:n]
     xmax = max(abs(x))
     I = [ k for k in range(n) if abs(x[k]) > tol*xmax ]
     if len(I) <= m:
@@ -149,8 +146,8 @@ if pylab_installed:
     pylab.figure(1, facecolor='w')
 
     # heuristic result
-    pylab.plot( res2[::2], card2[::2], 'o' )
-    pylab.plot( res2, card2, '-')
+    #pylab.plot( res2[::2], card2[::2], 'o' )
+    #pylab.plot( res2, card2, '-')
 
     # exhaustive result
     res2, card2 = [ bestres[0] ], [ 0 ]
@@ -160,7 +157,7 @@ if pylab_installed:
     pylab.plot( bestres.T, range(m+1), 'go')
     pylab.plot( res2, card2, 'g-')
 
-    pylab.xlabel('||A*x-b||_2')
-    pylab.ylabel('card(x)')
-    pylab.title('Sparse regressor selection (fig 6.7)')
+    pylab.xlabel(r'$||\boldsymbol{A}\boldsymbol{x}-\boldsymbol{b}||_2$')
+    pylab.ylabel(r'$\mathbf{card}(\boldsymbol{x})$')
+    pylab.title('Regressor selection problem')
     pylab.show()

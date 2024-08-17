@@ -177,9 +177,8 @@ if __name__ == '__main__':
                     test_consgap_eq.append(test_cons_gap_eq)
                     test_consgap_uq.append(test_cons_gap_uq)
                     
-                    
+                obj_diff = np.concatenate(test_objdiff, axis=0)    
                 obj_gap = np.concatenate(test_objgap, axis=0)
-                obj_diff = np.concatenate(test_objgap, axis=0)
                 cons_gap_eq = np.concatenate(test_consgap_eq, axis=0)
                 cons_gap_uq = np.concatenate(test_consgap_uq, axis=0)
                 

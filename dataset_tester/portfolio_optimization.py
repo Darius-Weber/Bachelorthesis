@@ -1,5 +1,8 @@
 import cvxopt as opt
-from cvxopt import solvers as cvxopt_solvers
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from solver import qp
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -43,16 +46,13 @@ def calculate_frontier(returns, opt_mus_n):
     G = opt.matrix(np.concatenate((-pbar, -np.identity(N)), 0))
     A = opt.matrix(1.0, (1, N))
     b = opt.matrix(1.0)
-    print(P)
-    print(G)
-    print(A)
     # hide optimization
     opt.solvers.options['show_progress'] = True
     # calculate portfolio weights, every weight vector is of size Nx1
     # find optimal weights with qp(P, q, G, h, A, b)
     try:
         optimal_weights = [
-            cvxopt_solvers.qp(P, q, G, opt.matrix(np.concatenate((-np.ones((1, 1)) * mu, np.zeros((N, 1))), 0)), A, b)['x'] for mu
+            qp.qp(P, q, G, opt.matrix(np.concatenate((-np.ones((1, 1)) * mu, np.zeros((N, 1))), 0)), A, b)['x'] for mu
             in optimal_mus]
     except Exception:
         print('Optimization failed. No optimal solution. Please change opt_mus_n.')
@@ -112,6 +112,6 @@ plt.plot(pf_sigmas, pf_mus, 'o', markersize=5, label='Available Market Portfolio
 plt.plot(optimal_sigmas, optimal_mus, 'y-o', color='orange', markersize=8, label='Efficient Frontier')
 plt.xlabel('Expected Volatility')
 plt.ylabel('Expected Return')
-plt.title('Efficient Frontier and Available Portfolios')
+plt.title('Markowitz portfolio optimization')
 plt.legend(loc='best')
 plt.show()
