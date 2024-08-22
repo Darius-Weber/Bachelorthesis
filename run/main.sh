@@ -1,7 +1,7 @@
 #!/bin/bash
 path_to_dataset="../../../../work/log1/darius.weber/Quadratic_Programming_Datasets"
 
-# LARGE SVM:
+# SOFT MARGIN SVM:
 # Gen_large_svm_400ins_32batch_l2 (sweep 18?)
 # python main.py --use_wandb=True --wandbproject=EVAL_GNNs --epoch=1000 --wandbname=Gen_large_svm_400ins_32batch_l2 --batchsize=32 --conv=genconv --datapath=$path_to_dataset --hidden=178 --ipm_alpha=0.8 --ipm_steps=8 --loss_weight_cons=0.4726154974906576 --loss_weight_obj=9.456393323035776 --loss_weight_x=1 --losstype=l2 --lr=0.001 --micro_batch=1 --num_mlp_layers=2 --num_pred_layers=3 --runs=3 --weight_decay=0
 # python evaluate.py --wandbname=Gen_large_svm_400ins_32batch_l2 --modelpath ../../../../work/log1/darius.weber/FINALlogs/exp6/ --hidden 178  --conv genconv --use_wandb=True --wandbproject=FINAL_TIME_GNNs --ipm_steps 8 --num_pred_layers 3 --num_mlp_layers 2 --conv_sequence cov --datapath=$path_to_dataset
@@ -16,7 +16,7 @@ path_to_dataset="../../../../work/log1/darius.weber/Quadratic_Programming_Datase
 
 
 
-# MARKOWITZ PORTFOLIO:
+# MARKOWITZ PORTFOLIO OPTIMIZATION:
 # Gen_large_portfolio_400ins_32batch_l2 (sweep 46)
 # python main.py --use_wandb=True --wandbproject=EVAL_GNNs --epoch=1000 --wandbname=Gen_large_portfolio_400ins_32batch_l2 --batchsize=32 --conv=genconv --datapath=$path_to_dataset --hidden=144 --ipm_alpha=0.8 --ipm_steps=8 --loss_weight_cons=6.374064663942023 --loss_weight_obj=9.91718499504328 --loss_weight_x=1 --losstype=l2 --lr=0.001 --micro_batch=1 --num_mlp_layers=2 --num_pred_layers=4 --runs=3 --weight_decay=0
 # python evaluate.py --wandbname=Gen_large_portfolio_400ins_32batch_l2 --modelpath ../../../../work/log1/darius.weber/FINALlogs/exp9/ --hidden 144  --conv genconv --use_wandb=True --wandbproject=FINAL_TIME_GNNs --ipm_steps 8 --num_pred_layers 4 --num_mlp_layers 2 --conv_sequence cov --datapath=$path_to_dataset
@@ -31,7 +31,7 @@ path_to_dataset="../../../../work/log1/darius.weber/Quadratic_Programming_Datase
 
 
 
-# LARGE REGRESSION:
+# REGRESSOR SELECTION:
 # Gen_large_regression_400ins_32batch_l2 (sweep 40)
 # python main.py --use_wandb=True --wandbproject=EVAL_GNNs --epoch=1000 --wandbname=Gen_large_regression_400ins_32batch_l2 --batchsize=32 --conv=genconv --datapath=$path_to_dataset --hidden=150 --ipm_alpha=0.8 --ipm_steps=8 --loss_weight_cons=5.945342296967018 --loss_weight_obj=2.887496329479448 --loss_weight_x=1 --losstype=l2 --lr=0.001 --micro_batch=1 --num_mlp_layers=2 --num_pred_layers=4 --runs=3 --weight_decay=0
 # python evaluate.py --wandbname=Gen_large_regression_400ins_32batch_l2  --modelpath ../../../../work/log1/darius.weber/FINALlogs/exp3/ --hidden 150  --conv genconv --use_wandb=True --wandbproject=FINAL_TIME_GNNs --ipm_steps 8 --num_pred_layers 4 --num_mlp_layers 2 --conv_sequence cov --datapath=$path_to_dataset
@@ -46,7 +46,7 @@ path_to_dataset="../../../../work/log1/darius.weber/Quadratic_Programming_Datase
 
 
 
-# FITTING CONVEX:
+# FITTING A CONVEX FUNCTION TO GIVEN DATA:
 # Gen_large_fittingconvex_400ins_32batch_l2 (sweep 31)
 # python main.py --use_wandb=True --wandbproject=EVAL_GNNs --epoch=1000 --wandbname=Gen_large_fittingconvex_400ins_32batch_l2 --batchsize=32 --conv=genconv --datapath=$path_to_dataset --hidden=106 --ipm_alpha=0.8 --ipm_steps=8 --loss_weight_cons=1.6697621098201474 --loss_weight_obj=7.107878509000387 --loss_weight_x=1 --losstype=l2 --lr=0.001 --micro_batch=1 --num_mlp_layers=2 --num_pred_layers=3 --runs=3 --weight_decay=0
 # python evaluate.py  --wandbname=Gen_large_fittingconvex_400ins_32batch_l2 --modelpath ../../../../work/log1/darius.weber/FINALlogs/exp0/ --hidden 106  --conv genconv --use_wandb=True --wandbproject=FINAL_TIME_GNNs --ipm_steps 8 --num_pred_layers 3 --num_mlp_layers 2 --conv_sequence cov --datapath=$path_to_dataset
