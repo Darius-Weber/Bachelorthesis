@@ -2,7 +2,7 @@
 
 ## Main results 
 ```angular2html
-See `run/main.sh` for the commands and hyperparameters. Simply delete the specific '#' and run it.
+See `run/main.sh` for the commands and hyperparameters. Simply delete the corresponding "#" and run it.
 ```
 
 ## Note:
