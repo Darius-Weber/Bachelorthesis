@@ -2,12 +2,12 @@
 
 ## Main results 
 ```angular2html
-See `run/main.sh` for the commands and hyperparameters. Simply uncommand the specific command and run it.
+See `run/main.sh` for the commands and hyperparameters. Simply delete the specific '#' and run it.
 ```
 
 ## Note:
 ```angular2html
-This work builds on the recent study by Qian et al. [![arXiv](https://img.shields.io/badge/arXiv-2310.10603-b31b1b.svg)](https://arxiv.org/abs/2310.10603). Therefore, some parts of the code are modified versions of: https://github.com/chendiqian/IPM_MPNN
+This work builds on the recent study by Qian et al. (https://arxiv.org/abs/2310.10603). Therefore, some parts of the code are modified versions of: https://github.com/chendiqian/IPM_MPNN
 ```
 
 ## Important packages:
