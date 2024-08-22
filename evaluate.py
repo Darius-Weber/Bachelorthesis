@@ -145,55 +145,53 @@ if __name__ == '__main__':
                               dropout=args.dropout,
                               use_norm=args.use_norm,
                               conv_sequence=args.conv_sequence).to(device)
-    counter = 3
-    modelbool = False
-    if (modelbool):
-        for root, dirs, files in os.walk(args.modelpath):
-            for ckpt in files:
-                if ckpt.endswith('.pt'):
-                    gnn.load_state_dict(torch.load(os.path.join(root, ckpt), map_location=device))
-                    gnn.eval()
-                    counter+=1
-                    for data in tqdm(dataloader):
-                        data = data.to(device)
+    counter = 0
+    for root, dirs, files in os.walk(args.modelpath):
+        for ckpt in files:
+            if ckpt.endswith('.pt'):
+                gnn.load_state_dict(torch.load(os.path.join(root, ckpt), map_location=device))
+                gnn.eval()
+                counter+=1
+                for data in tqdm(dataloader):
+                    data = data.to(device)
 
-                        if torch.cuda.is_available():
-                            torch.cuda.synchronize()
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
 
-                        t1 = time.perf_counter()
-                        pred = gnn(data)
+                    t1 = time.perf_counter()
+                    pred = gnn(data)
 
-                        if torch.cuda.is_available():
-                            # Synchronize because cuda works asynchronous
-                            # and the timing is not accurate without sync
-                            torch.cuda.synchronize()
+                    if torch.cuda.is_available():
+                        # Synchronize because cuda works asynchronous
+                        # and the timing is not accurate without sync
+                        torch.cuda.synchronize()
 
-                        t2 = time.perf_counter()
-                        pred_times.append(t2 - t1)
-                        
-                        test_gaps, test_diff,test_cons_gap_eq, test_cons_gap_uq = eval_metrics(device, data, pred, args)
-                        test_objdiff.append(test_diff)
-                        test_objgap.append(test_gaps)
-                        test_consgap_eq.append(test_cons_gap_eq)
-                        test_consgap_uq.append(test_cons_gap_uq)
-                        
-                    obj_diff = np.concatenate(test_objdiff, axis=0)    
-                    obj_gap = np.concatenate(test_objgap, axis=0)
-                    cons_gap_eq = np.concatenate(test_consgap_eq, axis=0)
-                    cons_gap_uq = np.concatenate(test_consgap_uq, axis=0)
+                    t2 = time.perf_counter()
+                    pred_times.append(t2 - t1)
                     
-                    test_cons_gap_eq_mean = cons_gap_eq[:, -1].mean().item() if cons_gap_eq.shape[0] != 0 else 0
-                    test_cons_gap_uq_mean = cons_gap_uq[:, -1].mean().item() if cons_gap_uq.shape[0] != 0 else 0
-                    test_objdiff_mean.append(obj_diff[:, -1].mean().item())
-                    test_objgap_mean.append(obj_gap[:, -1].mean().item())
-                    test_consgap_mean.append(test_cons_gap_eq_mean + test_cons_gap_uq_mean)
+                    test_gaps, test_diff,test_cons_gap_eq, test_cons_gap_uq = eval_metrics(device, data, pred, args)
+                    test_objdiff.append(test_diff)
+                    test_objgap.append(test_gaps)
+                    test_consgap_eq.append(test_cons_gap_eq)
+                    test_consgap_uq.append(test_cons_gap_uq)
+                    
+                obj_diff = np.concatenate(test_objdiff, axis=0)    
+                obj_gap = np.concatenate(test_objgap, axis=0)
+                cons_gap_eq = np.concatenate(test_consgap_eq, axis=0)
+                cons_gap_uq = np.concatenate(test_consgap_uq, axis=0)
+                
+                test_cons_gap_eq_mean = cons_gap_eq[:, -1].mean().item() if cons_gap_eq.shape[0] != 0 else 0
+                test_cons_gap_uq_mean = cons_gap_uq[:, -1].mean().item() if cons_gap_uq.shape[0] != 0 else 0
+                test_objdiff_mean.append(obj_diff[:, -1].mean().item())
+                test_objgap_mean.append(obj_gap[:, -1].mean().item())
+                test_consgap_mean.append(test_cons_gap_eq_mean + test_cons_gap_uq_mean)
 
-                    stat_dict = {
-                        "obj_diff": test_objdiff_mean[-1],
-                        "obj_gap": test_objgap_mean[-1],
-                        "cons_gap": test_consgap_mean[-1],
-                    }
-                    wandb.log(stat_dict)
+                stat_dict = {
+                    "obj_diff": test_objdiff_mean[-1],
+                    "obj_gap": test_objgap_mean[-1],
+                    "cons_gap": test_consgap_mean[-1],
+                }
+                wandb.log(stat_dict)
             
     solver_times = []
     
@@ -259,7 +257,7 @@ if __name__ == '__main__':
                 torch.cuda.synchronize()
             t2 = time.perf_counter()
             solver_times.append(t2 - t1)
-    if modelbool:
+            
         wandb.log({
             'test_objgap_mean': np.mean(test_objgap_mean),
             'test_objgap_std': np.std(test_objgap_mean),
