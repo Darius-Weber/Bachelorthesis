@@ -18,25 +18,25 @@ parameters:
     max: 10
     min: 0.15
     distribution: uniform
-  num_mlp_layers: #fix to 2
+  num_mlp_layers: 
     value: 2
-  loss_weight_x: #fix to 1
+  loss_weight_x:
     value: 1
-  weight_decay: #0
+  weight_decay:
     value: 0
-  micro_batch: #1
+  micro_batch:
     value: 1
-  ipm_steps: #8
+  ipm_steps:
     value: 8
-  ipm_alpha: #0.8
+  ipm_alpha: 
     value: 0.8
-  batchsize: #large as posible
-    value: 512
+  batchsize:
+    value: 32
   hidden:
     max: 360
     min: 90
     distribution: int_uniform
-  runs: #1
+  runs: 
     value: 1
   conv:
     values:
@@ -45,10 +45,7 @@ parameters:
       - genconv
     distribution: categorical
   losstype:
-    values:
-      - l1
-      - l2
-    distribution: categorical
+    value: l2
   lr:
     value: 0.001
   datapath:
