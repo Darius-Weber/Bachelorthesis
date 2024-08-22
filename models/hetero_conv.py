@@ -62,12 +62,6 @@ class HeteroConv(torch.nn.Module):
 
         self.aggr = aggr
 
-    def reset_parameters(self):
-        r"""Resets all learnable parameters of the module."""
-        # for conv in self.convs.values():
-        #     conv.reset_parameters()
-        raise NotImplementedError
-
     def forward(
         self,
         x_dict: Dict[NodeType, Tensor],

@@ -2,7 +2,7 @@ import sys
 import numpy as np
 if sys.version > '3': long = int
 options = {}
-# from https://github.com/cvxopt/cvxopt
+# from https://github.com/cvxopt/cvxopt (modified)
 def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
     initvals = None, callback=None, kktsolver = None, xnewcopy = None, xdot = None,
     xaxpy = None, xscal = None, ynewcopy = None, ydot = None, yaxpy = None,
@@ -773,7 +773,6 @@ def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
         if show_progress: #INTERMEDIATE RESULTS
             print("%2d: % 8.4e % 8.4e % 4.0e% 7.0e% 7.0e" \
                 %(iters, pcost, dcost, gap, pres, dres))
-            #print(x)
         if ( pres <= FEASTOL and dres <= FEASTOL and ( gap <= ABSTOL or
             (relgap is not None and relgap <= RELTOL) )) or \
             iters == MAXITERS:
@@ -810,7 +809,6 @@ def coneqp(P, q, G = None, h = None, dims = None, A = None, b = None,
         else:
             ts = misc.max_step(s, dims)
             tz = misc.max_step(z, dims)
-            #print("XXXXXX",x)
             if callback is not None:
                 intermediate_res.append(callback({'x': np.array(x).copy(), 'y': np.array(y).copy(), 's': np.array(s).copy(), 'z': np.array(z).copy(),
                                          'gap': gap, 'relative gap': relgap,

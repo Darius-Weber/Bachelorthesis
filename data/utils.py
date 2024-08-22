@@ -13,11 +13,6 @@ def args_set_bool(args: Dict):
 
 def collate_fn_ip(graphs: List[HeteroData]):
     new_batch = Batch.from_data_list(graphs)
-    #print("Q_num_row:", new_batch.Q_num_row)
-    #print("Q_nnz:", new_batch.Q_nnz)
-    #with open('debug.txt', 'a') as f:
-    #    print("Batch",new_batch, file=f)
-    #TODO look over this again. Get rid of some definitions
 
     #for Q
     row_bias_Q = torch.hstack([new_batch.Q_num_row.new_zeros(1), new_batch.Q_num_row[:-1]]).cumsum(dim=0)
@@ -44,23 +39,5 @@ def collate_fn_ip(graphs: List[HeteroData]):
     col_bias_A = torch.hstack([new_batch.A_num_col.new_zeros(1), new_batch.A_num_col[:-1]]).cumsum(dim=0)
     col_bias_A = torch.repeat_interleave(col_bias_A, new_batch.A_nnz)
     new_batch.A_col += col_bias_A
-
-    # for S
-    #row_bias_S = torch.hstack([new_batch.S_num_row.new_zeros(1), new_batch.S_num_row[:-1]]).cumsum(dim=0)
-    #row_bias_S = torch.repeat_interleave(row_bias_S, new_batch.S_nnz)
-    #new_batch.S_row += row_bias_S
-
-    #col_bias_S = torch.hstack([new_batch.S_num_col.new_zeros(1), new_batch.S_num_col[:-1]]).cumsum(dim=0)
-    #col_bias_S = torch.repeat_interleave(col_bias_S, new_batch.S_nnz)
-    #new_batch.S_col += col_bias_S
-
-    # Adjusting S adjacency matrix indices
-    #row_bias_S = torch.hstack([new_batch.S_num_row.new_zeros(1), new_batch.S_num_row[:-1]]).cumsum(dim=0)
-    #row_bias_S = torch.repeat_interleave(row_bias_S, new_batch.S_val.shape[0])
-    #new_batch.S_row += row_bias_S
-
-    #col_bias_S = torch.hstack([new_batch.S_num_col.new_zeros(1), new_batch.S_num_col[:-1]]).cumsum(dim=0)
-    #col_bias_S = torch.repeat_interleave(col_bias_S, new_batch.S_val.shape[0])
-    #new_batch.S_col += col_bias_S
 
     return new_batch

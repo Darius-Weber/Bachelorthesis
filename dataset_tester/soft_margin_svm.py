@@ -1,3 +1,8 @@
+# Modified code from:
+# https://xavierbourretsicotte.github.io/SVM_implementation.html
+# Dataset:
+# https://goelhardik.github.io/2016/11/28/svm-cvxopt/
+
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -5,9 +10,6 @@ from cvxopt import matrix as cvxopt_matrix, uniform as cvxopt_uniform
 from solver import qp
 import numpy as np
 from matplotlib import pyplot as plt
-#https://xavierbourretsicotte.github.io/SVM_implementation.html
-#Dataset:
-#https://goelhardik.github.io/2016/11/28/svm-cvxopt/
 
 DIM = 2
 COLORS = ['red', 'blue']
@@ -51,7 +53,7 @@ G = cvxopt_matrix(np.vstack((np.eye(m)*-1,np.eye(m))))
 h = cvxopt_matrix(np.hstack((np.zeros(m), np.ones(m) * C)))
 A = cvxopt_matrix(y.reshape(1, -1))
 b = cvxopt_matrix(np.zeros(1))
-# print(np.allclose(np.array(Q), np.array(np.dot(X_dash, X_dash.T))))
+
 #Run solver
 res = qp.qp(Q, q, G, h, A, b, callback=lambda res: res)
 c=1
@@ -61,7 +63,6 @@ for sol in res['intermediate']:
     if (c-1)%showiter==0 or (c-1)==len(res['intermediate'])-1:
         test+=1
         alphas = np.array(sol['x'])
-        #==================Computing and printing parameters===============================#
         w = ((y * alphas).T @ X).reshape(-1,1)
         S = (alphas > 1e-4).flatten()
         b = y[S] - np.dot(X[S], w)
@@ -96,9 +97,8 @@ for sol in res['intermediate']:
 
         plt.xlabel('$x_1$')
         plt.ylabel('$x_2$')
-        plt.title(rf'$\text{{Soft Margin SVM at IPM iteration }}{c}$')
+        plt.title("Soft Margin SVM")
         plt.legend()
         plt.grid(True)
         plt.show()
     c+=1
-print(test)

@@ -88,15 +88,8 @@ class Trainer:
     def get_loss(self, vals, data):
         #vals predicted values
         #data.gt_primals (ground truth)
+        
         loss = 0.
-
-        #if 'obj' in self.loss_target:
-        #    pred = vals[:, -self.ipm_steps:]
-        #    c_times_x = data.obj_const[:, None] * pred
-        #    obj_pred = scatter(c_times_x, data['vals'].batch, dim=0, reduce='sum')
-        #    obj_pred = (self.loss_func(obj_pred) * self.step_weight).mean()
-        #    loss = loss + obj_pred
-        #don't needed?
         if 'primal' in self.loss_target:
             primal_loss = (self.loss_func(
                 vals[:, -self.ipm_steps:] -
@@ -121,22 +114,10 @@ class Trainer:
         :param data:
         :return:
         """
-        #CONSTRAIN VIOLTATION
+        #INEQUALITY CONSTRAINT VIOLTATION
         pred = pred[:, -self.ipm_steps:]
         Gx = scatter(pred[data.G_col, :] * data.G_val[:, None], data.G_row, reduce='sum', dim=0, dim_size=data.h[:, None].shape[0])
         constraint_gap = torch.relu(Gx - data.h[:, None])
-        # Normalize constraint_violation_uq
-        # Logarithmic scaling for constraint_violation_uq
-        #print("before log",constraint_gap)
-        #if constraint_gap.numel() > 0:
-        #    log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
-        #    max_log_scaled_gap = log_scaled_gap.max()
-        #    if max_log_scaled_gap > 0:
-        #        log_scaled_gap = log_scaled_gap / max_log_scaled_gap.detach()
-        #        print("logscaled", log_scaled_gap)
-        #    print("after log", log_scaled_gap)
-        #    return log_scaled_gap
-        #print("constraint_gap",constraint_gap)
         return constraint_gap
 
     def get_constraint_violation_eq(self, pred, data):
@@ -146,24 +127,11 @@ class Trainer:
         :param data:
         :return:
         """
-        #CONSTRAIN VIOLTATION
+        #EQUALITY CONSTRAINT VIOLTATION
         pred = pred[:, -self.ipm_steps:]
         Ax = scatter(pred[data.A_col, :] * data.A_val[:, None], data.A_row, reduce='sum', dim=0)
 
         constraint_gap = Ax - data.b[:, None]
-        #print("gap-eq",constraint_gap)
-        # Normalize constraint_violation_eq
-        # Logarithmic scaling for constraint_violation_eq
-        #print("before log eq", constraint_gap)
-        #if constraint_gap.numel() > 0:
-        #    log_scaled_gap = torch.log1p(torch.abs(constraint_gap))
-        #    max_log_scaled_gap = log_scaled_gap.max()
-        #    if max_log_scaled_gap > 0:
-        #        log_scaled_gap = log_scaled_gap / max_log_scaled_gap.detach()
-        #        print("logscaled", log_scaled_gap)
-            #print("after log", log_scaled_gap)
-        #    return log_scaled_gap
-        #print("constraint_gap",constraint_gap)
         return constraint_gap
 
     def get_obj_metric(self, data, pred, hard_non_negative=False):
@@ -186,56 +154,18 @@ class Trainer:
 
         xQx_gt = scatter(x_gt[data.Q_col, :] * data.Q_val[:, None] * x_gt[data.Q_row, :], Q_batch, reduce='sum', dim=0)
 
-        #xQx_gt = scatter(xQx_gt_Q, data['vals'].batch, dim=0, reduce='sum')
-
         obj_pred = obj_pred_c + xQx_pred
         obj_gt = obj_gt_c + xQx_gt
-        #print("obj_value",data.obj_value)
-        #print("obj_gt_c", obj_gt_c)
-        #print("obj_pred",obj_pred)
-        #print("obj_gt",obj_gt)
-
-        #print("obj_gap",(obj_pred - obj_gt)/(obj_gt+1e-5)) #This can be a really high value because obj_gt is sometimes very small (e.g. with softmargin svm). Therefore, there is also a high train loss.
-        #print("obj_diff",(obj_pred - obj_gt)) #not normalized
-
-        #Suggestions for a different normalization:
-        #print("tanh", torch.tanh((obj_pred - obj_gt))) #Good for getting small train loss, but (high) difference is cut to 1, -1
-        #print("log+1", torch.log1p(torch.abs(obj_pred - obj_gt))) #(high) difference is not cutted, but again leads to higher train loss, but not astronomically high (more between 0-100)
-        #return (obj_pred - obj_gt) / (obj_gt + 1e-5)
-        #print("log+1 scaled",torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()) #(high) difference is not cut up, and train loss is in the range of (0-10) (own implementation)
-        
-        #obj_diff = obj_pred - obj_gt
-        #max_obj_diff = obj_diff.abs().max()
-        #if max_obj_diff > 0:
-        #    obj_diff = obj_diff / max_obj_diff.detach()
-        #return obj_diff
-        #return torch.log1p(torch.abs(obj_pred - obj_gt))/ torch.log1p(torch.abs(obj_pred - obj_gt)).max().detach()#(obj_gt+1e-5)
-        #obj_diff = obj_pred - obj_gt
-        #print("before obj_diff")
-        #obj_diff = obj_pred - obj_gt
-        #print("obj diff", obj_diff)
-        #obj_gap = obj_diff/(1+torch.abs(obj_gt)).detach()
-        #print("denominator", (1+torch.abs(obj_gt)))
-        #print("obj_gap", obj_gap)
-        #log_scaled_diff = torch.log1p(torch.abs(obj_diff))
-        #print("after obj_dif", log_scaled_diff)
-        #max_log_scaled_diff = log_scaled_diff.max()
-        #if max_log_scaled_diff > 0:
-        #    log_scaled_diff = log_scaled_diff / max_log_scaled_diff.detach()
-        # Calculate the difference
-        #print("before normalization", torch.log1p(torch.abs(obj_pred - obj_gt)))
-        #print("after", torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1))
         diff = obj_pred - obj_gt
-        return (torch.log1p(torch.abs(diff)), diff)
-        #return torch.log1p(torch.abs(obj_pred - obj_gt))/(torch.log1p(torch.abs(obj_pred - obj_gt)).max()+1).detach()
-        #--------------------------Important----------------------------------#
+        return (torch.log1p(torch.abs(diff)), diff) #log1 normalization for training, and diff for metric
+
     def obj_metric(self, dataloader, model):
         model.eval
         obj_gap = []
         for i, data in enumerate(dataloader):
             data = data.to(self.device)
             vals = model(data)
-            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False)[0].detach().cpu().numpy())) #TODO: look for changes (default False)
+            obj_gap.append(np.abs(self.get_obj_metric(data, vals, hard_non_negative=False)[0].detach().cpu().numpy()))
 
         return np.concatenate(obj_gap, axis=0)
 

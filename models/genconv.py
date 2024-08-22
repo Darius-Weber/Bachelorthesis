@@ -63,7 +63,6 @@ class GENConv(MessagePassing):
             self.lin_src = Linear(in_channels[0], out_channels, bias=bias)
 
         if edge_dim is not None and edge_dim != out_channels:
-            # self.lin_edge = Linear(edge_dim, out_channels, bias=bias)
             self.lin_edge = MLP([edge_dim, out_channels, out_channels], norm='batch', bias=bias)
 
         if isinstance(self.aggr_module, MultiAggregation):

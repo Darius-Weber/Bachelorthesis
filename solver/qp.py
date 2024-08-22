@@ -1,7 +1,7 @@
 from .coneqp import coneqp
 
 options = {}
-#from https://github.com/cvxopt/cvxopt
+#from https://github.com/cvxopt/cvxopt (modified)
 def qp(P, q, G = None, h = None, A = None, b = None, callback = None, solver = None,
     kktsolver = None, initvals = None, **kwargs):
 

@@ -1,4 +1,8 @@
-import cvxopt
+# Modified code from: Stephen P Boyd and Lieven Vandenberghe. Convex optimization. Cambridge university press, 2004.
+# Figure 6.24, page 339.
+# Fitting a convex function to given data
+# The problem data are different from the book.
+
 import numpy as np
 import sys
 import os
@@ -9,18 +13,6 @@ from cvxopt import matrix, spmatrix
 
 # Set the seed for the random number generator
 np.random.seed()
-
-def split_positive_semidefinite(Q, tol=1e-10):
-    # Perform SVD of Q with full precision
-    U, Sigma, Vt = np.linalg.svd(Q, full_matrices=False)
-
-    # Construct S = U @ sqrt(diag(Sigma)) @ Vt
-    sqrt_sigma = np.sqrt(np.maximum(Sigma, 0))  # Ensure Sigma is non-negative
-    S = U @ np.diag(sqrt_sigma)
-
-    # Round elements close to zero due to floating point errors
-    S[np.abs(S) < tol] = 0
-    return S
 
 # Define a function to generate steep U-shaped concave data for 'y'
 def generate_u_shaped_data(u):
@@ -41,10 +33,8 @@ def generate_u_shaped_data(u):
     return poly_component + sinusoidal_component + noise
 
 
-
-
 qp.options['show_progress'] = True
-
+#Number of Datapoints
 NUM = 100
 # Generate 'u' values (from -2 to 2) for the independent variable
 u_values = np.linspace(-2.0, 2.0, num=NUM).reshape(-1, 1)
@@ -69,10 +59,9 @@ P = matrix(0.0, (nvars, nvars))
 # Set the diagonal elements to the desired values
 for i in range(m):
     P[i, i] = 1.0
-S = split_positive_semidefinite(P)
 q = matrix(0.0, (nvars,1))
 q[:m] = -y
-# print(np.allclose(np.array(P), np.array(np.dot(S, S.T))))
+
 # m blocks (i = 0,...,m-1) of linear inequalities
 #
 #     yhat[i] + g[i]' * (u[j] - u[i]) <= yhat[j], j = 0,...,m-1.
@@ -114,7 +103,7 @@ for sol in res['intermediate']:
             pylab.plot(u_values, y_values, 'wo', markeredgecolor='b')
             pylab.plot(ts, f, '-g')
             pylab.axis([min(u_values)-1, max(u_values)+1, min(y_values)-1, max(y_values)+1])
-            pylab.title(rf'$\text{{Fitting a convex function to given data at IPM iteration }}{c}$')
+            pylab.title("Fitting a convex function to given data")
             pylab.show()
             
     c+=1

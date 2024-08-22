@@ -9,7 +9,6 @@ from models.hetero_conv import HeteroConv
 
 
 def strseq2rank(conv_sequence):
-    # TODO look what is best
     if conv_sequence == 'parallel':
         c2v = v2c = v2o = o2v = c2o = o2c = 0
     elif conv_sequence == 'cvo':
@@ -33,7 +32,7 @@ def strseq2rank(conv_sequence):
         c2o = v2o = 1
         v2c = o2c = 2
 
-    # used in paper
+    # used in this work
     elif conv_sequence == 'cov':
         v2c = o2c = 0
         c2o = v2o = 1
@@ -89,7 +88,7 @@ class TripartiteHeteroGNN(torch.nn.Module):
                  num_mlp_layers,
                  dropout,
                  use_norm,
-                 conv_sequence='cov'):  #In paper default cov
+                 conv_sequence='cov'):  #In the work default cov
         super().__init__()
 
         self.dropout = dropout
@@ -133,7 +132,6 @@ class TripartiteHeteroGNN(torch.nn.Module):
 
         hiddens = []
         for i in range(self.num_layers):
-            # h1 = x_dict
             # dictionary with HeteroConv to different edge types (hetero_conv is applied!)
             h2 = self.gcns[i](x_dict, edge_index_dict, edge_attr_dict)
             keys = h2.keys()

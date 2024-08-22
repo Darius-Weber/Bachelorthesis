@@ -1,5 +1,12 @@
 from cvxopt import matrix as cvxopt_matrix, spmatrix, blas, lapack
 import numpy as np
+    
+# Modified code from: 
+# Stephen P Boyd and Lieven Vandenberghe. Convex optimization. Cambridge university press, 2004.  
+# https://github.com/aghanhussain/Markowitz-Portfolio-Optimization-with-Python/blob/master/Markowitz-Portfolio-Optimization-with-Python.ipynb
+# https://xavierbourretsicotte.github.io/SVM_implementation.html
+# Dataset:
+# https://goelhardik.github.io/2016/11/28/svm-cvxopt/
 
 def split_positive_semidefinite(Q, tol=1e-10):
     # Perform SVD of Q with full precision
@@ -53,7 +60,6 @@ def generate_softmarginsvm(y, X, C):
     h = cvxopt_matrix(np.hstack((np.zeros(m), np.ones(m) * C)))
     A = cvxopt_matrix(y.reshape(1, -1))
     b = cvxopt_matrix(np.zeros(1))
-    print(np.allclose(np.array(Q), np.array(np.dot(X_dash, X_dash.T))))
     return Q, q, G, h, A, b, X_dash
 
 def generate_markowitz_portfolio_optimization(returns, r_min, pbar):
@@ -66,7 +72,6 @@ def generate_markowitz_portfolio_optimization(returns, r_min, pbar):
     A = cvxopt_matrix(1.0, (1, N))
     b = cvxopt_matrix(1.0)
     h = cvxopt_matrix(np.concatenate((-np.ones((1, 1)) * r_min, np.zeros((N, 1))), 0))
-    print(np.allclose(np.array(Q), np.array(np.dot(S, S.T))))
     return Q, q, G, h, A, b, S
 
 def generate_convex_function_to_data(u_values):
@@ -119,7 +124,6 @@ def generate_convex_function_to_data(u_values):
     #dummy equality constraint
     A = cvxopt_matrix(A)
     b = cvxopt_matrix(0.0, (0, 1))
-    print(np.allclose(np.array(Q), np.array(np.dot(S, S.T))))
     return Q, q, G, h, A, b, S
 
 def generate_regressor_selection(alpha_index, m, n):
@@ -160,5 +164,4 @@ def generate_regressor_selection(alpha_index, m, n):
     A = spmatrix([], [], [], (0, q.size[0]))
     A = cvxopt_matrix(A)
     b = cvxopt_matrix(0.0, (0, 1))
-    print(np.allclose(np.array(Q), np.array(np.dot(S, S.T))))
     return Q, q, G, h, A, b, S

@@ -17,11 +17,6 @@ from trainer import Trainer
 
 
 def args_parser():
-    # run.py --datapath DATA_TO_YOUR_INSTANCES --upper 1. --ipm_alpha 0.15 --weight_decay 1.2e-6 --batchsize 512
-    # --hidden 180 --num_pred_layers 4 --num_mlp_layers 4 --share_lin_weight false --conv_sequence cov
-    # --loss_weight_x 1.2 --loss_weight_obj 0.8 --loss_weight_cons 0.16 --runs 3 --conv genconv
-
-
     parser = argparse.ArgumentParser(description='hyper params for training graph dataset')
     # admin
     parser.add_argument('--datapath', type=str, required=True)
@@ -57,8 +52,8 @@ def args_parser():
     parser.add_argument('--loss', type=str, default='primal+objgap+constraint')
     parser.add_argument('--loss_weight_x', type=float, default=1.0)
     parser.add_argument('--loss_weight_obj', type=float, default=1.0)
-    parser.add_argument('--loss_weight_cons', type=float, default=1.0)  # does not work
-    parser.add_argument('--losstype', type=str, default='l2', choices=['l1', 'l2'])  # no big different
+    parser.add_argument('--loss_weight_cons', type=float, default=1.0) 
+    parser.add_argument('--losstype', type=str, default='l2', choices=['l1', 'l2']) 
     return parser.parse_args()
 
 
@@ -88,7 +83,7 @@ if __name__ == '__main__':
                entity="dariusweber_",
                dir=wandb_folder
                )
-    # TODO: look if colloate_fn_ip is right
+    
     dataset = QPDataset(args.datapath, args.ipm_steps,
                         extra_path=f'{args.ipm_steps}steps')
 
@@ -148,12 +143,10 @@ if __name__ == '__main__':
         pbar = tqdm(range(args.epoch))  # progress bar
         for epoch in pbar:
             train_loss = trainer.train(train_loader, model, optimizer)
-            #print(train_loss)
             with torch.no_grad():
                 val_loss = trainer.eval(val_loader, model, scheduler)
                 #train metric
                 train_gaps, train_diff, train_constraint_gap_eq, train_constraint_gap_uq = trainer.eval_metrics(train_loader, model)
-                #print("train_diff", train_diff)
                 train_mean_diff = train_diff[:, -1].mean().item()
                 train_mean_gap = train_gaps[:, -1].mean().item()
                 train_constraint_gap_eq_mean = train_constraint_gap_eq[:, -1].mean().item() if train_constraint_gap_eq.shape[0] != 0 else 0
@@ -190,10 +183,10 @@ if __name__ == '__main__':
                               'lr': scheduler.optimizer.param_groups[0]["lr"]})
             log_dict = {'train_loss': train_loss,
                         'val_loss': val_loss,
-                        'train_obj_diff_last_mean': train_mean_diff, #train metrics
-                        'train_obj_gap_last_mean': train_mean_gap, #train metrics
-                        'train_cons_gap_last_mean': train_cons_gap_mean, #train metrics
-                        'train_hybrid_gap': train_mean_gap + train_cons_gap_mean, #train metrics
+                        'train_obj_diff_last_mean': train_mean_diff, 
+                        'train_obj_gap_last_mean': train_mean_gap, 
+                        'train_cons_gap_last_mean': train_cons_gap_mean, 
+                        'train_hybrid_gap': train_mean_gap + train_cons_gap_mean, 
                         'val_obj_diff_last_mean': cur_mean_diff,
                         'val_obj_gap_last_mean': cur_mean_gap,
                         'val_cons_gap_last_mean': cur_cons_gap_mean,
@@ -212,6 +205,7 @@ if __name__ == '__main__':
             test_cons_gap_eq_mean = test_cons_gap_eq[:, -1].mean().item() if val_constraint_gap_eq.shape[0] != 0 else 0
             test_cons_gap_uq_mean = test_cons_gap_uq[:, -1].mean().item() if val_constraint_gap_uq.shape[0] != 0 else 0
             #obj_gap, cons_gap_eq, cons_gap_uq
+            
         # test_losses.append(test_loss)
         test_objdiff_mean.append(test_diff[:, -1].mean().item())
         test_objgap_mean.append(test_gaps[:, -1].mean().item())
