@@ -60,8 +60,8 @@ def args_parser():
 if __name__ == '__main__':
     log_folder: str = "../../../../work/log1/darius.weber/logs"
     wandb_folder: str = "../../../../work/log1/darius.weber/wandb"
-    #log_folder: str = "logs"
-    #wandb_folder: str = "wandb"
+    # log_folder: str = "logs"
+    # wandb_folder: str = "wandb"
     args = args_parser()
     args = args_set_bool(vars(args))
     args = ConfigDict(args)  # convert for wandb and yaml
@@ -145,14 +145,14 @@ if __name__ == '__main__':
             train_loss = trainer.train(train_loader, model, optimizer)
             with torch.no_grad():
                 val_loss = trainer.eval(val_loader, model, scheduler)
-                #train metric
+                # train metric
                 train_gaps, train_diff, train_constraint_gap_eq, train_constraint_gap_uq = trainer.eval_metrics(train_loader, model)
                 train_mean_diff = train_diff[:, -1].mean().item()
                 train_mean_gap = train_gaps[:, -1].mean().item()
                 train_constraint_gap_eq_mean = train_constraint_gap_eq[:, -1].mean().item() if train_constraint_gap_eq.shape[0] != 0 else 0
                 train_constraint_gap_uq_mean = train_constraint_gap_uq[:, -1].mean().item() if train_constraint_gap_uq.shape[0] != 0 else 0
                 train_cons_gap_mean = train_constraint_gap_eq_mean + train_constraint_gap_uq_mean
-                #val metric
+                # val metric
                 val_gaps, val_diff,val_constraint_gap_eq, val_constraint_gap_uq = trainer.eval_metrics(val_loader, model)
                 
                 # metric to cache the best model
@@ -186,7 +186,7 @@ if __name__ == '__main__':
                         'train_obj_diff_last_mean': train_mean_diff, 
                         'train_obj_gap_last_mean': train_mean_gap, 
                         'train_cons_gap_last_mean': train_cons_gap_mean, 
-                        'train_hybrid_gap': train_mean_gap + train_cons_gap_mean, 
+                        'train_hybrid_gap': train_mean_gap + train_cons_gap_mean, # for the sweep
                         'val_obj_diff_last_mean': cur_mean_diff,
                         'val_obj_gap_last_mean': cur_mean_gap,
                         'val_cons_gap_last_mean': cur_cons_gap_mean,
@@ -204,7 +204,6 @@ if __name__ == '__main__':
             
             test_cons_gap_eq_mean = test_cons_gap_eq[:, -1].mean().item() if val_constraint_gap_eq.shape[0] != 0 else 0
             test_cons_gap_uq_mean = test_cons_gap_uq[:, -1].mean().item() if val_constraint_gap_uq.shape[0] != 0 else 0
-            #obj_gap, cons_gap_eq, cons_gap_uq
             
         # test_losses.append(test_loss)
         test_objdiff_mean.append(test_diff[:, -1].mean().item())
@@ -223,5 +222,5 @@ if __name__ == '__main__':
         'test_objgap_std': np.std(test_objgap_mean),
         'test_consgap_mean': np.mean(test_consgap_mean),
         'test_consgap_std': np.std(test_consgap_mean),
-        'test_hybrid_gap': np.mean(test_objgap_mean) + np.mean(test_consgap_mean),  # for the sweep
+        'test_hybrid_gap': np.mean(test_objgap_mean) + np.mean(test_consgap_mean),  
     })
