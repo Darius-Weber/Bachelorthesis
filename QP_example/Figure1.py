@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-# Define the function
+# Define the objective function f(x1, x2)
 def f(x1, x2):
     return 2 * x1**2 + 2 * x1 * x2 + 5 * x2**2 + 3 * x1
 
@@ -83,7 +83,6 @@ ax.set_xlabel(r'$x_1$')
 ax.set_ylabel(r'$x_2$')
 ax.set_zlabel(r'f$(x_1, x_2)$')
 #ax.set_title(r'3D plot of f$(x_1, x_2)$ with equality constraint (blue) $x_1 + x_2 = 1$ and inequality constraint (red) $-x_1 - x_2 \leq 0$')
-
 
 # Add longer 3D arrows for axis
 arrow_length_pos = x_axis  # Increase arrow length for positive direction
